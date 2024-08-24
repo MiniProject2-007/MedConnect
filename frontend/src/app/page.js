@@ -8,4 +8,4 @@ const App = () => {
   )
 }
 
-export default Home
+export default App
