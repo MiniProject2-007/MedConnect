@@ -1,7 +1,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import StoreProvider from "@/Components/HOC/StoreProvider";
-import ThemeProvider from "@/Components/HOC/ThemeProvider";
+import StoreProvider from "@/components/HOC/StoreProvider";
+import ThemeProvider from "@/components/HOC/ThemeProvider";
+import MySidebar from "@/components/root/MySidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,8 +15,16 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <StoreProvider>
-                <body className={inter.className}>
-                    <ThemeProvider>{children}</ThemeProvider>
+                <body className={inter.className} >
+                    <ThemeProvider>
+                        <div className="flex">
+                            <MySidebar />
+                            <div className="flex-1">
+                                {children}
+                            </div>
+                        </div>
+                        <MySidebar />
+                    </ThemeProvider>
                 </body>
             </StoreProvider>
         </html>
