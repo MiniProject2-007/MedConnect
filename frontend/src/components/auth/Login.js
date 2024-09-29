@@ -1,12 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const Login = () => {
+    const router = useRouter();
     return (
         <div className="flex flex-col justify-center flex-1 px-4 py-12 sm:px-6 lg:flex-none lg:px-10 xl:px-12 bg-white rounded-lg shadow-md">
             <div className="w-fit max-w-sm mx-auto lg:w-96">

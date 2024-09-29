@@ -16,7 +16,7 @@ import TypingAnimation from "@/components/magicui/typing-animation";
 export default function LandingPage() {
     const router = useRouter();
     return (
-        <div className="flex flex-col min-h-screen bg-white">
+        <div className="flex flex-col min-h-screen bg-white ">
             <motion.header
                 initial={{ opacity: 0, y: -50 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -47,7 +47,7 @@ export default function LandingPage() {
                             Testimonials
                         </a>
                     </nav>
-                    <div className="flex gap-4">
+                    <div className=" gap-4 hidden md:flex">
                         <Button
                             variant="outline"
                             className="border-gray-300 text-gray-600 hover:bg-gray-50"

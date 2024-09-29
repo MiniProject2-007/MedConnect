@@ -3,6 +3,7 @@ import "./globals.css";
 import StoreProvider from "@/components/HOC/StoreProvider";
 import ThemeProvider from "@/components/HOC/ThemeProvider";
 import MySidebar from "@/components/root/MySidebar";
+import SocketProvider from "@/components/HOC/SocketProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,15 +16,16 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <StoreProvider>
-                <body className={inter.className} >
+                <body className={inter.className}>
                     <ThemeProvider>
-                        <div className="flex">
-                            <MySidebar />
-                            <div className="flex-1">
-                                {children}
+                        <SocketProvider>
+                            <div className="flex h-screen overflow-x-hidden">
+                                <MySidebar />
+                                <div className="flex-1 overflow-auto">
+                                    {children}
+                                </div>
                             </div>
-                        </div>
-                        <MySidebar />
+                        </SocketProvider>
                     </ThemeProvider>
                 </body>
             </StoreProvider>
