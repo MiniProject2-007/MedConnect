@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -13,10 +13,12 @@ import {
     Share2,
     MessageSquare,
     NotebookPen,
+    Loader2,
 } from "lucide-react";
 import SideContent from "./SideContent";
 import Notes from "./Notes";
 import { useSocket } from "../HOC/SocketProvider";
+import peer from "@/services/peer";
 
 const MeetingRoom = ({ id }) => {
     const socket = useSocket();
@@ -25,20 +27,159 @@ const MeetingRoom = ({ id }) => {
     const [isVideoOn, setIsVideoOn] = useState(true);
     const remoteVideoRef = useRef();
     const localVideoRef = useRef();
-    useEffect(() => {
-        navigator.mediaDevices
-            .getUserMedia({
-                video: true,
-                audio: true,
-            })
-            .then((stream) => {
-                localVideoRef.current.srcObject = stream;
-            });
+    const [myStream, setMyStream] = useState(null);
+    const [remoteStream, setRemoteStream] = useState(null);
+    const [remoteSocketId, setRemoteSocketId] = useState(null);
+
+    const handleUserJoined = useCallback(({ email, id }) => {
+        console.log(`Email ${email} joined room`);
+        setRemoteSocketId(id);
     }, []);
-    const handleCall = () => {};
+
+    const handleCallUser = useCallback(async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true,
+        });
+        const offer = await peer.getOffer();
+        socket.emit("user:call", { to: remoteSocketId, offer });
+        setMyStream(stream);
+        localVideoRef.current.srcObject = stream;
+    }, [remoteSocketId, socket]);
+
+    const handleIncommingCall = useCallback(
+        async ({ from, offer }) => {
+            console.log("handleIncommingCall", from, offer);
+            setRemoteSocketId(from);
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: true,
+                });
+                setMyStream(stream);
+                localVideoRef.current.srcObject = stream;
+            } catch (error) {
+                console.log(error);
+            }
+            console.log(`Incoming Call`, from, offer);
+            const ans = await peer.getAnswer(offer);
+            socket.emit("call:accepted", { to: from, ans });
+        },
+        [socket]
+    );
+
+    const sendStreams = useCallback(() => {
+        for (const track of myStream.getTracks()) {
+            console.log("Adding Track", track);
+            peer.peer.addTrack(track, myStream);
+        }
+        console.log("Sending Streams");
+    }, [myStream]);
+
+    const handleCallAccepted = useCallback(
+        ({ from, ans }) => {
+            peer.setLocalDescription(ans);
+            console.log("Call Accepted!");
+            sendStreams();
+        },
+        [sendStreams]
+    );
+
+    // Add this new function
+    const handleTrack = useCallback((ev) => {
+        const remoteStream = ev.streams[0];
+        console.log("GOT TRACKS!!", remoteStream);
+        setRemoteStream(remoteStream);
+    }, []);
+
+    useEffect(() => {
+        peer.peer.addEventListener("track", handleTrack);
+        return () => {
+            peer.peer.removeEventListener("track", handleTrack);
+        };
+    }, [handleTrack]);
+
+    useEffect(() => {
+        if (remoteStream && remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+        }
+    }, [remoteStream]);
+
+    const handleNegoNeeded = useCallback(async () => {
+        const offer = await peer.getOffer();
+        socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
+    }, [remoteSocketId, socket]);
+
+    useEffect(() => {
+        peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
+        return () => {
+            peer.peer.removeEventListener(
+                "negotiationneeded",
+                handleNegoNeeded
+            );
+        };
+    }, [handleNegoNeeded]);
+
+    const handleNegoNeedIncomming = useCallback(
+        async ({ from, offer }) => {
+            const ans = await peer.getAnswer(offer);
+            socket.emit("peer:nego:done", { to: from, ans });
+        },
+        [socket]
+    );
+
+    const handleNegoNeedFinal = useCallback(async ({ ans }) => {
+        await peer.setLocalDescription(ans);
+    }, []);
+
+    useEffect(() => {
+        socket.on("user:joined", handleUserJoined);
+        socket.on("incomming:call", handleIncommingCall);
+        socket.on("call:accepted", handleCallAccepted);
+        socket.on("peer:nego:needed", handleNegoNeedIncomming);
+        socket.on("peer:nego:final", handleNegoNeedFinal);
+
+        return () => {
+            socket.off("user:joined", handleUserJoined);
+            socket.off("incomming:call", handleIncommingCall);
+            socket.off("call:accepted", handleCallAccepted);
+            socket.off("peer:nego:needed", handleNegoNeedIncomming);
+            socket.off("peer:nego:final", handleNegoNeedFinal);
+        };
+    }, [
+        socket,
+        handleUserJoined,
+        handleIncommingCall,
+        handleCallAccepted,
+        handleNegoNeedIncomming,
+        handleNegoNeedFinal,
+    ]);
+
+    // useEffect(() => {
+    //     try{
+    //         navigator.mediaDevices
+    //         .getUserMedia({
+    //             video: true,
+    //                 audio: true,
+    //             })
+    //             .then((stream) => {
+    //                 setMyStream(stream);
+    //                 localVideoRef.current.srcObject = stream;
+    //             });
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }, []);
+
     return (
         <div className="w-full h-screen relative">
-            <video className="w-full h-full" ref={remoteVideoRef} autoPlay />
+            <video
+                id="remote-video"
+                className="w-full h-full"
+                ref={remoteVideoRef}
+                playsInline
+                autoPlay
+            />
             <div className="absolute right-4 bottom-20 h-48 w-64 bg-gray-200 rounded-lg">
                 <video
                     className="h-48 rounded-lg"
@@ -78,7 +219,8 @@ const MeetingRoom = ({ id }) => {
                             variant="outline"
                             size="sm"
                             className="border-red-500 hover:bg-red-600 text-red-500"
-                            onClick={handleCall}
+                            onClick={handleCallUser}
+                            disabled={!remoteSocketId}
                         >
                             <Phone className="w-4 h-4" />
                         </Button>

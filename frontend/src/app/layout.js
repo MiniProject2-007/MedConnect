@@ -3,7 +3,7 @@ import "./globals.css";
 import StoreProvider from "@/components/HOC/StoreProvider";
 import ThemeProvider from "@/components/HOC/ThemeProvider";
 import MySidebar from "@/components/root/MySidebar";
-import SocketProvider from "@/components/HOC/SocketProvider";
+import { SocketProvider } from "@/components/HOC/SocketProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 

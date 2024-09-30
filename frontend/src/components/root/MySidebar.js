@@ -32,7 +32,7 @@ export default function MySidebar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
 
-    if (pathname === "/" || pathname.includes("/meeting")) return null;
+    if (pathname === "/" || pathname.includes("/meeting/")) return null;
     return (
         <div
             onMouseEnter={() => setIsOpen(true)}
