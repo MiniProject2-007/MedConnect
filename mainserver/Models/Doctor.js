@@ -24,6 +24,10 @@ const doctorSchema = new mongoose.Schema(
         qualifications: {
             type: String,
         },
+        rating: {
+            type: Number,
+            default: 0,
+        },
         role: {
             type: String,
             enum: ["doctor"],
