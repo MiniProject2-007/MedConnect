@@ -4,7 +4,8 @@ import StoreProvider from "@/components/HOC/StoreProvider";
 import ThemeProvider from "@/components/HOC/ThemeProvider";
 import MySidebar from "@/components/root/MySidebar";
 import { SocketProvider } from "@/components/HOC/SocketProvider";
-
+import { ClerkProvider } from "@clerk/nextjs";
+import Header from "@/components/root/Header";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -15,20 +16,23 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="en">
-            <StoreProvider>
-                <body className={inter.className}>
-                    <ThemeProvider>
-                        <SocketProvider>
-                            <div className="flex h-screen overflow-x-hidden">
-                                <MySidebar />
-                                <div className="flex-1 overflow-auto">
-                                    {children}
+            <ClerkProvider>
+                <StoreProvider>
+                    <body className={inter.className}>
+                        <ThemeProvider>
+                            <SocketProvider>
+                                <div className="flex h-screen overflow-x-hidden">
+                                    <MySidebar />
+                                    <div className="flex-1 overflow-auto">
+                                        <Header />
+                                        {children}
+                                    </div>
                                 </div>
-                            </div>
-                        </SocketProvider>
-                    </ThemeProvider>
-                </body>
-            </StoreProvider>
+                            </SocketProvider>
+                        </ThemeProvider>
+                    </body>
+                </StoreProvider>
+            </ClerkProvider>
         </html>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Video, MessageSquare, FileText, Pen } from "lucide-react";
@@ -13,8 +13,15 @@ import StatCard from "@/components/landing/StatCard";
 import { useRouter } from "next/navigation";
 import FeaturesInAction from "@/components/landing/FeaturesInAction";
 import TypingAnimation from "@/components/magicui/typing-animation";
+import { SignedOut, SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
 export default function LandingPage() {
     const router = useRouter();
+    const { userId } = useAuth();   
+    useEffect(() => {
+        if (userId) {
+            router.push("/home");
+        }
+    }, []);
     return (
         <div className="flex flex-col min-h-screen bg-white ">
             <motion.header
@@ -48,23 +55,23 @@ export default function LandingPage() {
                         </a>
                     </nav>
                     <div className=" gap-4 hidden md:flex">
-                        <Button
-                            variant="outline"
-                            className="border-gray-300 text-gray-600 hover:bg-gray-50"
-                            onClick={() => {
-                                router.push("/auth/login");
-                            }}
-                        >
-                            Log In
-                        </Button>
-                        <Button
-                            className="bg-[#FF7F50] text-white hover:bg-[#FF6347]"
-                            onClick={() => {
-                                router.push("/auth/signup");
-                            }}
-                        >
-                            Sign Up
-                        </Button>
+                        <SignedOut>
+                            <SignInButton forceRedirectUrl="/home">
+                                <Button
+                                    variant="outline"
+                                    className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                                >
+                                    Log In
+                                </Button>
+                            </SignInButton>
+                        </SignedOut>
+                        <SignedOut>
+                            <SignUpButton forceRedirectUrl="/home">
+                                <Button className="bg-[#FF7F50] text-white hover:bg-[#FF6347]">
+                                    Sign Up
+                                </Button>
+                            </SignUpButton>
+                        </SignedOut>
                     </div>
                 </div>
             </motion.header>
