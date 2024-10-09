@@ -46,3 +46,13 @@ export const isDoctor = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+export const doctors = async (req, res) => {
+    try {
+        const doctors = await Doctor.find(); 
+        res.status(200).json(doctors);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching doctors", error: err.message });
+    }
+}
+
