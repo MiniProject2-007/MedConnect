@@ -3,7 +3,8 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import connectDB from "./db.js";
 
-import authRouter from "./routes/user.js";
+import authRouter from "./routes/doctor.js";
+import appointmentRouter from "./routes/appointment.js";
 
 const app = express();
 
@@ -14,7 +15,8 @@ app.get("/", (req, res) => {
     res.send("Hello World");
 });
 
-app.use("/api/auth", authRouter);
+app.use("/api/doctor", authRouter);
+app.use("/api/appointment", appointmentRouter);
 
 const startServer = async () => {
     try {

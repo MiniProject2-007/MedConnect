@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
                     <body className={inter.className}>
                         <ThemeProvider>
                             <SocketProvider>
-                                <div className="flex h-screen overflow-x-hidden">
+                                <div className="flex h-screen overflow-x-hidden bg-gray-50">
                                     <MySidebar />
                                     <div className="flex-1 overflow-auto">
                                         <Header />

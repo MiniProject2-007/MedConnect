@@ -17,16 +17,16 @@ const meetingSchema = new mongoose.Schema(
             default: 0,
         },
         date: {
-            type: Date,
+            type: String,
             required: true,
         },
         time: {
-            type: String,
+            type: Number,
             required: true,
         },
         status: {
             type: String,
-            enum: ["ucoming", "ongoing", "completed"],
+            enum: ["upcoming", "ongoing", "completed"],
             default: "upcoming",
         },
     },

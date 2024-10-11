@@ -34,7 +34,7 @@ const DoctorSignInForm = () => {
         try {
             const token = await getToken();
             const res = await fetch(
-                "http://localhost:5000/api/auth/doctorSignin",
+                "http://localhost:5000/api/doctor/doctorSignin",
                 {
                     method: "POST",
                     headers: {

@@ -15,6 +15,9 @@ const doctorSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
+        bannerImage: {
+            type: String,
+        },
         specialization: {
             type: String,
         },
@@ -27,6 +30,18 @@ const doctorSchema = new mongoose.Schema(
         rating: {
             type: Number,
             default: 0,
+        },
+        availability: {
+            type: String,
+            default: "Available",
+        },
+        startTime: {
+            type: Number,
+            default: 10,
+        },
+        endTime: {
+            type: Number,
+            default: 17,
         },
         role: {
             type: String,

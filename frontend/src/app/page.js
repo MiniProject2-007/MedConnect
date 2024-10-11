@@ -16,7 +16,7 @@ import TypingAnimation from "@/components/magicui/typing-animation";
 import { SignedOut, SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
 export default function LandingPage() {
     const router = useRouter();
-    const { userId } = useAuth();   
+    const { userId } = useAuth();
     useEffect(() => {
         if (userId) {
             router.push("/home");
@@ -99,15 +99,17 @@ export default function LandingPage() {
                                 transition={{ delay: 0.6, duration: 0.5 }}
                                 className="space-x-4"
                             >
-                                <Button
-                                    size="lg"
-                                    className="bg-[#FF7F50] text-white hover:bg-[#FF6347]"
-                                    onClick={() => {
-                                        router.push("/auth/signup");
-                                    }}
-                                >
-                                    Get Started
-                                </Button>
+                                <SignInButton>
+                                    <Button
+                                        size="lg"
+                                        className="bg-[#FF7F50] text-white hover:bg-[#FF6347]"
+                                        onClick={() => {
+                                            router.push("/auth/signup");
+                                        }}
+                                    >
+                                        Get Started
+                                    </Button>
+                                </SignInButton>
                                 <Button
                                     size="lg"
                                     variant="outline"

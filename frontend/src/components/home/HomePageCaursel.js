@@ -18,32 +18,26 @@ const carouselItems = [
   {
     title: "Book Your Appointment",
     description: "Easy and quick online booking for your medical needs",
-    image: "/public/BookAppoinment.jpg",
+    image: "/hero.png",
     cta: "Book Now",
   },
   {
     title: "Expert Doctors",
     description: "Consult with our team of experienced specialists",
-    image: "/placeholder.svg?height=400&width=600",
+    image: "/hero2.png",
     cta: "Find a Doctor",
   },
   {
     title: "24/7 Support",
     description: "Round-the-clock assistance for your health concerns",
-    image: "/placeholder.svg?height=400&width=600",
+    image: "/hero.png",
     cta: "Contact Us",
   },
   {
     title: "Telemedicine Services",
     description: "Get medical advice from the comfort of your home",
-    image: "/placeholder.svg?height=400&width=600",
+    image: "/hero2.png",
     cta: "Start Consultation",
-  },
-  {
-    title: "Health Tips",
-    description: "Stay informed with our latest health and wellness advice",
-    image: "/placeholder.svg?height=400&width=600",
-    cta: "Learn More",
   },
 ]
 
@@ -55,7 +49,7 @@ export function HomePageCarousel() {
   return (
     <Carousel
       plugins={[plugin.current]}
-      className="w-full mx-auto max-w-[96%] p-2"
+      className="w-full mx-auto max-w-[96%] "
       onMouseEnter={plugin.current.stop}
       onMouseLeave={plugin.current.reset}
     >
@@ -69,13 +63,13 @@ export function HomePageCarousel() {
             >
               <Card className="border-none shadow-lg">
                 <CardContent className="p-0">
-                  <div className="relative aspect-[25/8] overflow-hidden rounded-lg">
+                  <div className="relative aspect-[25/15] md:aspect-[25/8] overflow-hidden rounded-lg">
                     <Image
                       src={item.image}
                       alt={item.title}
-                      layout="fill"
-                      objectFit="cover"
-                      className="transition-transform duration-300 hover:scale-105"
+                      width={1920}
+                      height={1080}
+                      className="transition-transform duration-300  h-full"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-0 left-0 p-6 text-white">
