@@ -4,49 +4,62 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Video, Mic, MicOff, VideoOff, Phone } from "lucide-react";
+import { useSocket } from "../HOC/SocketProvider";
+import { useRouter } from "next/navigation";
 
 const JoinMeeting = ({ slug }) => {
     const [isMicOn, setIsMicOn] = useState(true);
     const [isVideoOn, setIsVideoOn] = useState(true);
-    const [name, setName] = useState("");
+    const [localStream, setLocalStream] = useState(null);
+    const [email, setEmail] = useState("");
+    const socket = useSocket();
+    const router = useRouter();
 
     const videoRef = useRef(null);
     const toggleMic = () => setIsMicOn(!isMicOn);
+
     const toggleVideo = () => {
         if (isVideoOn) {
             stopCamera();
-        }else{
+        } else {
             startCamera();
         }
         setIsVideoOn(!isVideoOn);
     };
 
     const startCamera = () => {
-        navigator.mediaDevices
-            .getUserMedia({ video: true, audio: true })
-            .then((stream) => {
-                videoRef.current.srcObject = stream;
-            })
-            .catch((err) => {
-                console.error(err);
-            });
+        try {
+            navigator.mediaDevices
+                .getUserMedia({ video: true, audio: true })
+                .then((stream) => {
+                    setLocalStream(stream);
+                    videoRef.current.srcObject = stream;
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const stopCamera = () => {
-        const stream = videoRef.current.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach((track) => {
-            track.stop();
-        });
-        videoRef.current.srcObject = null;
+        if (localStream && localStream.getVideoTracks().length > 0) {
+            localStream.getVideoTracks()[0].stop();
+        }
     };
     const handleJoinMeeting = (e) => {
         e.preventDefault();
-        console.log(`Joining meeting ${slug} as ${name}`);
+        socket.emit("room:join", { slug, email });
+        // alert("Joining Meeting");
+        router.push(`/meeting/live/${slug}`);
     };
 
     useEffect(() => {
         startCamera();
+        return () => {
+            stopCamera();
+        };
     }, []);
     return (
         <div className="min-h-screen md:flex items-center justify-center p-4">
@@ -56,19 +69,22 @@ const JoinMeeting = ({ slug }) => {
                 </h1>
                 <div className="bg-white p-6 rounded-lg shadow-md">
                     <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                        {isVideoOn ? (
-                            <video
-                                className="w-full h-full object-cover"
-                                autoPlay
-                                muted
-                                playsInline
-                                ref={videoRef}
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-700 text-white">
-                                <VideoOff size={48} />
-                            </div>
-                        )}
+                        <video
+                            className={`w-full h-full object-cover ${
+                                isVideoOn ? "" : "hidden"
+                            }`}
+                            autoPlay
+                            muted
+                            playsInline
+                            ref={videoRef}
+                        />
+                        <div
+                            className={`w-full h-full flex items-center justify-center bg-gray-700 text-white ${
+                                isVideoOn ? "hidden" : ""
+                            }`}
+                        >
+                            <VideoOff size={48} />
+                        </div>
                     </div>
                     <div className="space-y-4">
                         <div className="flex justify-center space-x-4">
@@ -101,9 +117,20 @@ const JoinMeeting = ({ slug }) => {
                                 )}
                             </Button>
                         </div>
-
+                        <div>
+                            <Input
+                                type="email"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                name="email"
+                            />
+                        </div>
                         <div className="flex items-center justify-center space-x-4 mb-4">
-                            <Button className="w-full bg-[#FF7F50] text-white hover:bg-[#FF6347]">
+                            <Button
+                                className="w-full bg-[#FF7F50] text-white hover:bg-[#FF6347]"
+                                onClick={handleJoinMeeting}
+                            >
                                 Join Meeting
                             </Button>
                         </div>

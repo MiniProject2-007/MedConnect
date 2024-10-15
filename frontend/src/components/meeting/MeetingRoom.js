@@ -20,7 +20,7 @@ import Notes from "./Notes";
 import { useSocket } from "../HOC/SocketProvider";
 import peer from "@/services/peer";
 
-const MeetingRoom = ({ id }) => {
+const MeetingRoom = ({ slug }) => {
     const socket = useSocket();
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
@@ -37,14 +37,23 @@ const MeetingRoom = ({ id }) => {
     }, []);
 
     const handleCallUser = useCallback(async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: true,
-        });
-        const offer = await peer.getOffer();
-        socket.emit("user:call", { to: remoteSocketId, offer });
-        setMyStream(stream);
-        localVideoRef.current.srcObject = stream;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: true,
+            });
+
+            setMyStream(stream);
+            localVideoRef.current.srcObject = stream;
+
+            // Only create offer if connection state is stable
+            if (peer.peer.connectionState === "stable") {
+                const offer = await peer.getOffer();
+                socket.emit("user:call", { to: remoteSocketId, offer });
+            }
+        } catch (error) {
+            console.log(error);
+        }
     }, [remoteSocketId, socket]);
 
     const handleIncommingCall = useCallback(
@@ -78,14 +87,16 @@ const MeetingRoom = ({ id }) => {
 
     const handleCallAccepted = useCallback(
         ({ from, ans }) => {
-            peer.setLocalDescription(ans);
-            console.log("Call Accepted!");
-            sendStreams();
+            // Ensure that the peer connection is expecting an answer
+            if (peer.peer.signalingState === "have-local-offer") {
+                peer.setLocalDescription(ans);
+                console.log("Call Accepted!");
+                sendStreams();
+            }
         },
         [sendStreams]
     );
 
-    // Add this new function
     const handleTrack = useCallback((ev) => {
         const remoteStream = ev.streams[0];
         console.log("GOT TRACKS!!", remoteStream);
@@ -106,8 +117,11 @@ const MeetingRoom = ({ id }) => {
     }, [remoteStream]);
 
     const handleNegoNeeded = useCallback(async () => {
-        const offer = await peer.getOffer();
-        socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
+        // Only trigger negotiation when the connection is stable
+        if (peer.peer.connectionState === "stable") {
+            const offer = await peer.getOffer();
+            socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
+        }
     }, [remoteSocketId, socket]);
 
     useEffect(() => {
@@ -129,7 +143,10 @@ const MeetingRoom = ({ id }) => {
     );
 
     const handleNegoNeedFinal = useCallback(async ({ ans }) => {
-        await peer.setLocalDescription(ans);
+        // Set the remote answer when negotiation is completed
+        if (peer.peer.signalingState === "have-local-offer") {
+            await peer.setLocalDescription(ans);
+        }
     }, []);
 
     useEffect(() => {
@@ -155,22 +172,40 @@ const MeetingRoom = ({ id }) => {
         handleNegoNeedFinal,
     ]);
 
-    // useEffect(() => {
-    //     try{
-    //         navigator.mediaDevices
-    //         .getUserMedia({
-    //             video: true,
-    //                 audio: true,
-    //             })
-    //             .then((stream) => {
-    //                 setMyStream(stream);
-    //                 localVideoRef.current.srcObject = stream;
-    //             });
-    //     } catch (error) {
-    //         console.log(error);
-    //     }
-    // }, []);
+    useEffect(() => {
+        if (remoteSocketId) {
+            try {
+                navigator.mediaDevices
+                    .getUserMedia({
+                        video: true,
+                        audio: true,
+                    })
+                    .then((stream) => {
+                        setMyStream(stream);
+                        localVideoRef.current.srcObject = stream;
+                    });
+            } catch (err) {
+                console.log(err);
+            }
+        }
+    }, [remoteSocketId]);
 
+    useEffect(() => {
+        if (remoteSocketId) {
+            handleCallUser();
+        }
+    }, [remoteSocketId]);
+
+    if (!remoteSocketId) {
+        return (
+            <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-200">
+                <Loader2 className="w-12 h-12 animate-spin text-[#FF7F50]" />
+                <p className="mt-4 text-lg text-gray-600">
+                    Waiting for participant...
+                </p>
+            </div>
+        );
+    }
     return (
         <div className="w-full h-screen relative">
             <video
@@ -219,8 +254,6 @@ const MeetingRoom = ({ id }) => {
                             variant="outline"
                             size="sm"
                             className="border-red-500 hover:bg-red-600 text-red-500"
-                            onClick={handleCallUser}
-                            disabled={!remoteSocketId}
                         >
                             <Phone className="w-4 h-4" />
                         </Button>
@@ -241,17 +274,19 @@ const MeetingRoom = ({ id }) => {
                                     <MessageSquare className="w-4 h-4" />
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="right" className="w-[90%]">
+                            <SheetContent side="right">
                                 <SideContent />
                             </SheetContent>
                         </Sheet>
                         <Drawer>
-                            <DrawerTrigger
-                                variant="outline"
-                                size="sm"
-                                className="border border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100 p-2 px-3 rounded-md"
-                            >
-                                <NotebookPen className="w-4 h-4" />
+                            <DrawerTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
+                                >
+                                    <NotebookPen className="w-4 h-4" />
+                                </Button>
                             </DrawerTrigger>
                             <DrawerContent>
                                 <Notes />

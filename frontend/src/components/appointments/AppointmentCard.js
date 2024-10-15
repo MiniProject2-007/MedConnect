@@ -78,11 +78,11 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
             const endpoint =
                 action === "cancel"
                     ? `cancelAppointment/${appointment._id}`
-                    : action === "approve"
+                 : action === "approve"
                     ? `approveAppointment/${appointment._id}`
                     : `rejectAppointment/${appointment._id}`;
             const response = await fetch(
-                `http://localhost:5000/api/appointment/${endpoint}`,
+                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/appointment/${endpoint}`,
                 {
                     method: "POST",
                     headers: {

@@ -29,7 +29,7 @@ const Appointments = () => {
         setIsLoading(true);
         try {
             const token = await getToken();
-            const response = await fetch("http://localhost:5000/api/appointment/appointments", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_MAIN_SERVER}/appointment/appointments`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     userId: userId,

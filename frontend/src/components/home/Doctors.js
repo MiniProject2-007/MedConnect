@@ -18,7 +18,7 @@ export default function Doctors() {
         const token = await getToken();
         try {
             const response = await fetch(
-                "http://localhost:5000/api/doctor/doctors",
+                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/doctors`,
                 {
                     headers: {
                         "Content-Type": "application/json",

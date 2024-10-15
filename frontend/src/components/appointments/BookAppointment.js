@@ -51,7 +51,7 @@ const BookAppointment = ({ doctor }) => {
 
         try {
             const token = await getToken()
-            const response = await fetch("http://localhost:5000/api/appointment/bookAppointment", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_MAIN_SERVER}/appointment/bookAppointment`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
