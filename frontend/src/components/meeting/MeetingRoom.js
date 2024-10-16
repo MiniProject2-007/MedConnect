@@ -39,14 +39,6 @@ const MeetingRoom = ({ slug }) => {
 
     const handleCallUser = useCallback(async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: true,
-            });
-
-            setMyStream(stream);
-            localVideoRef.current.srcObject = stream;
-
             if (peer.peer.connectionState === "stable") {
                 const offer = await peer.getOffer();
                 socket.emit("user:call", { to: remoteSocketId, offer });
@@ -103,19 +95,6 @@ const MeetingRoom = ({ slug }) => {
         setRemoteStream(remoteStream);
     }, []);
 
-    useEffect(() => {
-        peer.peer.addEventListener("track", handleTrack);
-        return () => {
-            peer.peer.removeEventListener("track", handleTrack);
-        };
-    }, [handleTrack]);
-
-    useEffect(() => {
-        if (remoteStream && remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-        }
-    }, [remoteStream]);
-
     const handleNegoNeeded = useCallback(async () => {
         // Only trigger negotiation when the connection is stable
         if (peer.peer.connectionState === "stable") {
@@ -123,16 +102,6 @@ const MeetingRoom = ({ slug }) => {
             socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
         }
     }, [remoteSocketId, socket]);
-
-    useEffect(() => {
-        peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
-        return () => {
-            peer.peer.removeEventListener(
-                "negotiationneeded",
-                handleNegoNeeded
-            );
-        };
-    }, [handleNegoNeeded]);
 
     const handleNegoNeedIncomming = useCallback(
         async ({ from, offer }) => {
@@ -148,6 +117,43 @@ const MeetingRoom = ({ slug }) => {
             await peer.setLocalDescription(ans);
         }
     }, []);
+
+    const getMyStream = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: true,
+            });
+
+            setMyStream(stream);
+            localVideoRef.current.srcObject = stream;
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    useEffect(() => {
+        peer.peer.addEventListener("track", handleTrack);
+        return () => {
+            peer.peer.removeEventListener("track", handleTrack);
+        };
+    }, [handleTrack]);
+
+    useEffect(() => {
+        if (remoteStream && remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+        }
+    }, [remoteStream]);
+
+    useEffect(() => {
+        peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
+        return () => {
+            peer.peer.removeEventListener(
+                "negotiationneeded",
+                handleNegoNeeded
+            );
+        };
+    }, [handleNegoNeeded]);
 
     useEffect(() => {
         socket.on("user:joined", handleUserJoined);
@@ -189,6 +195,12 @@ const MeetingRoom = ({ slug }) => {
             }
         }
     }, [remoteSocketId]);
+
+    useEffect(() => {
+        if (isCallStarted) {
+            getMyStream();
+        }
+    }, [isCallStarted]);
 
     if (!remoteSocketId) {
         return (
