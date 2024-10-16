@@ -30,6 +30,7 @@ const MeetingRoom = ({ slug }) => {
     const [myStream, setMyStream] = useState(null);
     const [remoteStream, setRemoteStream] = useState(null);
     const [remoteSocketId, setRemoteSocketId] = useState(null);
+    const [isCallStarted, setIsCallStarted] = useState(false);
 
     const handleUserJoined = useCallback(({ email, id }) => {
         console.log(`Email ${email} joined room`);
@@ -46,7 +47,6 @@ const MeetingRoom = ({ slug }) => {
             setMyStream(stream);
             localVideoRef.current.srcObject = stream;
 
-            // Only create offer if connection state is stable
             if (peer.peer.connectionState === "stable") {
                 const offer = await peer.getOffer();
                 socket.emit("user:call", { to: remoteSocketId, offer });
@@ -190,12 +190,6 @@ const MeetingRoom = ({ slug }) => {
         }
     }, [remoteSocketId]);
 
-    useEffect(() => {
-        if (remoteSocketId) {
-            handleCallUser();
-        }
-    }, [remoteSocketId]);
-
     if (!remoteSocketId) {
         return (
             <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-200">
@@ -203,6 +197,18 @@ const MeetingRoom = ({ slug }) => {
                 <p className="mt-4 text-lg text-gray-600">
                     Waiting for participant...
                 </p>
+            </div>
+        );
+    }
+    if (!isCallStarted && remoteSocketId) {
+        return (
+            <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-200">
+                <Button
+                    onClick={handleCallUser}
+                    className="bg-[#FF7F50] text-white"
+                >
+                    Start Call
+                </Button>
             </div>
         );
     }

@@ -22,7 +22,7 @@ import { SignOutButton, UserButton, useAuth } from "@clerk/nextjs";
 
 const sidebarItems = [
     { name: "Home", href: "/home", icon: Home },
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
+    // { name: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
     { name: "Appointments", href: "/appointments", icon: Calendar },
     { name: "Messages", href: "/messages", icon: MessageSquare },
     { name: "Records", href: "/records", icon: FileText },
@@ -54,7 +54,7 @@ export default function MySidebar() {
                     isOpen ? "w-64" : "w-28"
                 )}
             >
-                <div className="flex items-center justify-center mb-16">
+                <div className="flex items-center justify-center mb-28">
                     <UserButton />
                 </div>
                 <ScrollArea className="flex-grow mt-8">
