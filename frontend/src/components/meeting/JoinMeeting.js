@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Video, Mic, MicOff, VideoOff, Phone } from "lucide-react";
+import { Video, Mic, MicOff, VideoOff } from "lucide-react";
 import { useSocket } from "../HOC/SocketProvider";
 import { useRouter } from "next/navigation";
 
@@ -16,51 +16,75 @@ const JoinMeeting = ({ slug }) => {
     const router = useRouter();
 
     const videoRef = useRef(null);
-    const toggleMic = () => setIsMicOn(!isMicOn);
+    
+    const toggleMic = () => {
+        if (localStream) {
+            localStream.getAudioTracks().forEach(track => {
+                track.enabled = !isMicOn;
+            });
+        }
+        setIsMicOn(!isMicOn);
+    };
 
     const toggleVideo = () => {
-        if (isVideoOn) {
-            stopCamera();
-        } else {
-            startCamera();
+        if (localStream) {
+            localStream.getVideoTracks().forEach(track => {
+                track.enabled = !isVideoOn;
+            });
         }
         setIsVideoOn(!isVideoOn);
     };
 
-    const startCamera = () => {
+    const startCamera = async () => {
         try {
-            navigator.mediaDevices
-                .getUserMedia({ video: true, audio: true })
-                .then((stream) => {
-                    setLocalStream(stream);
-                    videoRef.current.srcObject = stream;
-                })
-                .catch((err) => {
-                    console.error(err);
-                });
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: true, 
+                audio: true 
+            });
+            setLocalStream(stream);
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
         } catch (err) {
-            console.error(err);
+            console.error("Error accessing media devices:", err);
+            setIsVideoOn(false);
+            setIsMicOn(false);
         }
     };
 
-    const stopCamera = () => {
-        if (localStream && localStream.getVideoTracks().length > 0) {
-            localStream.getVideoTracks()[0].stop();
+    const stopCamera = useCallback(() => {
+        if (localStream) {
+            localStream.getTracks().forEach(track => {
+                track.stop();
+            });
+            setLocalStream(null);
+            if (videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
         }
-    };
-    const handleJoinMeeting = (e) => {
+    }, [localStream]);
+
+    const handleSubmitForm = useCallback((e) => {
         e.preventDefault();
-        socket.emit("room:join", { slug, email });
-        // alert("Joining Meeting");
+        socket.emit("room:join", { email, room: slug });
+    }, [email, slug, socket]);
+
+    const handleJoinRoom = useCallback((data) => {
+        const { email, room } = data;
         router.push(`/meeting/live/${slug}`);
-    };
+    }, [router, slug]);
 
     useEffect(() => {
         startCamera();
+        
+        socket.on("room:join", handleJoinRoom);
+        
         return () => {
             stopCamera();
+            socket.off("room:join", handleJoinRoom);
         };
-    }, []);
+    }, [socket, handleJoinRoom, stopCamera]);
+
     return (
         <div className="min-h-screen md:flex items-center justify-center p-4">
             <div className="w-full max-w-xl">
@@ -86,7 +110,7 @@ const JoinMeeting = ({ slug }) => {
                             <VideoOff size={48} />
                         </div>
                     </div>
-                    <div className="space-y-4">
+                    <form onSubmit={handleSubmitForm} className="space-y-4">
                         <div className="flex justify-center space-x-4">
                             <Button
                                 type="button"
@@ -123,18 +147,17 @@ const JoinMeeting = ({ slug }) => {
                                 placeholder="Enter your email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                name="email"
+                                required
+                                className="w-full"
                             />
                         </div>
-                        <div className="flex items-center justify-center space-x-4 mb-4">
-                            <Button
-                                className="w-full bg-[#FF7F50] text-white hover:bg-[#FF6347]"
-                                onClick={handleJoinMeeting}
-                            >
-                                Join Meeting
-                            </Button>
-                        </div>
-                    </div>
+                        <Button
+                            type="submit"
+                            className="w-full bg-[#FF7F50] text-white hover:bg-[#FF6347]"
+                        >
+                            Join Meeting
+                        </Button>
+                    </form>
                 </div>
                 <p className="text-center mt-4 text-sm text-gray-600">
                     Meeting ID: <span className="font-semibold">{slug}</span>
