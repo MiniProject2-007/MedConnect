@@ -327,25 +327,15 @@ const RoomPage = () => {
         setRemoteSocketId(id);
     }, []);
 
-    // Start call automatically when user joins
-    useEffect(() => {
-        if (remoteSocketId) {
-            // Automatically start the call when a remote user is present
-            handleCallUser();
-        }
-    }, [remoteSocketId]);
-
     const handleCallUser = useCallback(async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
                 video: true,
             });
-            setMyStream(stream);
-    
             const offer = await peer.getOffer();
-            await peer.setLocalDescription(offer);  // Set local description for the offer
             socket.emit("user:call", { to: remoteSocketId, offer });
+            setMyStream(stream);
         } catch (error) {
             console.error("Error accessing media devices:", error);
         }
@@ -360,15 +350,9 @@ const RoomPage = () => {
                     video: true,
                 });
                 setMyStream(stream);
-    
-                console.log(`Incoming Call from`, from, offer);
-    
-                // Set remote offer first before creating an answer
-                await peer.setRemoteDescription(offer); 
-                const answer = await peer.getAnswer(); // Create an answer to the offer
-                await peer.setLocalDescription(answer);  // Set local description for the answer
-    
-                socket.emit("call:accepted", { to: from, ans: answer });
+                console.log(`Incoming Call`, from, offer);
+                const ans = await peer.getAnswer(offer);
+                socket.emit("call:accepted", { to: from, ans });
             } catch (error) {
                 console.error("Error handling incoming call:", error);
             }
@@ -462,6 +446,25 @@ const RoomPage = () => {
             <h4 className="text-lg mb-4">
                 {remoteSocketId ? "Connected" : "No one in room"}
             </h4>
+
+            <div className="space-x-4 mb-4">
+                {myStream && (
+                    <button
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        onClick={sendStreams}
+                    >
+                        Send Stream
+                    </button>
+                )}
+                {remoteSocketId && (
+                    <button
+                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                        onClick={handleCallUser}
+                    >
+                        CALL
+                    </button>
+                )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {myStream && (
