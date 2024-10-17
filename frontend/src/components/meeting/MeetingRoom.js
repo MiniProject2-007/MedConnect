@@ -42,6 +42,7 @@ const MeetingRoom = ({ slug }) => {
             if (peer.peer.connectionState === "stable") {
                 const offer = await peer.getOffer();
                 socket.emit("user:call", { to: remoteSocketId, offer });
+                setIsCallStarted(true);
             }
         } catch (error) {
             console.log(error);
