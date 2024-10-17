@@ -30,7 +30,6 @@ const MeetingRoom = ({ slug }) => {
     const [myStream, setMyStream] = useState(null);
     const [remoteStream, setRemoteStream] = useState(null);
     const [remoteSocketId, setRemoteSocketId] = useState(null);
-    const [isCallStarted, setIsCallStarted] = useState(false);
 
     const handleUserJoined = useCallback(({ email, id }) => {
         console.log(`Email ${email} joined room`);
@@ -39,10 +38,18 @@ const MeetingRoom = ({ slug }) => {
 
     const handleCallUser = useCallback(async () => {
         try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: true,
+            });
+
+            setMyStream(stream);
+            localVideoRef.current.srcObject = stream;
+
+            // Only create offer if connection state is stable
             if (peer.peer.connectionState === "stable") {
                 const offer = await peer.getOffer();
                 socket.emit("user:call", { to: remoteSocketId, offer });
-                setIsCallStarted(true);
             }
         } catch (error) {
             console.log(error);
@@ -96,6 +103,19 @@ const MeetingRoom = ({ slug }) => {
         setRemoteStream(remoteStream);
     }, []);
 
+    useEffect(() => {
+        peer.peer.addEventListener("track", handleTrack);
+        return () => {
+            peer.peer.removeEventListener("track", handleTrack);
+        };
+    }, [handleTrack]);
+
+    useEffect(() => {
+        if (remoteStream && remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+        }
+    }, [remoteStream]);
+
     const handleNegoNeeded = useCallback(async () => {
         // Only trigger negotiation when the connection is stable
         if (peer.peer.connectionState === "stable") {
@@ -103,6 +123,16 @@ const MeetingRoom = ({ slug }) => {
             socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
         }
     }, [remoteSocketId, socket]);
+
+    useEffect(() => {
+        peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
+        return () => {
+            peer.peer.removeEventListener(
+                "negotiationneeded",
+                handleNegoNeeded
+            );
+        };
+    }, [handleNegoNeeded]);
 
     const handleNegoNeedIncomming = useCallback(
         async ({ from, offer }) => {
@@ -118,43 +148,6 @@ const MeetingRoom = ({ slug }) => {
             await peer.setLocalDescription(ans);
         }
     }, []);
-
-    const getMyStream = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: true,
-            });
-
-            setMyStream(stream);
-            localVideoRef.current.srcObject = stream;
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-    useEffect(() => {
-        peer.peer.addEventListener("track", handleTrack);
-        return () => {
-            peer.peer.removeEventListener("track", handleTrack);
-        };
-    }, [handleTrack]);
-
-    useEffect(() => {
-        if (remoteStream && remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-        }
-    }, [remoteStream]);
-
-    useEffect(() => {
-        peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
-        return () => {
-            peer.peer.removeEventListener(
-                "negotiationneeded",
-                handleNegoNeeded
-            );
-        };
-    }, [handleNegoNeeded]);
 
     useEffect(() => {
         socket.on("user:joined", handleUserJoined);
@@ -198,11 +191,10 @@ const MeetingRoom = ({ slug }) => {
     }, [remoteSocketId]);
 
     useEffect(() => {
-        if (isCallStarted) {
-            getMyStream();
+        if (remoteSocketId) {
+            handleCallUser();
         }
-    }, [isCallStarted]);
-
+    }, [remoteSocketId]);
     if (!remoteSocketId) {
         return (
             <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-200">
@@ -210,18 +202,6 @@ const MeetingRoom = ({ slug }) => {
                 <p className="mt-4 text-lg text-gray-600">
                     Waiting for participant...
                 </p>
-            </div>
-        );
-    }
-    if (remoteSocketId && !isCallStarted) {
-        return (
-            <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-200">
-                <Button
-                    onClick={handleCallUser}
-                    className="bg-[#FF7F50] text-white"
-                >
-                    Start Call
-                </Button>
             </div>
         );
     }
