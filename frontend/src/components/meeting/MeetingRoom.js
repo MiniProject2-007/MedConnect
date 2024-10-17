@@ -325,12 +325,15 @@ const RoomPage = () => {
     const handleUserJoined = useCallback(({ email, id }) => {
         console.log(`Email ${email} joined room`);
         setRemoteSocketId(id);
+    }, []);
 
-        // Automatically call the user if a remote user joins
-        if (id) {
+    // Start call automatically when user joins
+    useEffect(() => {
+        if (remoteSocketId) {
+            // Automatically start the call when a remote user is present
             handleCallUser();
         }
-    }, []);
+    }, [remoteSocketId]);
 
     const handleCallUser = useCallback(async () => {
         try {
@@ -338,9 +341,10 @@ const RoomPage = () => {
                 audio: true,
                 video: true,
             });
+            setMyStream(stream);
+
             const offer = await peer.getOffer();
             socket.emit("user:call", { to: remoteSocketId, offer });
-            setMyStream(stream);
         } catch (error) {
             console.error("Error accessing media devices:", error);
         }
@@ -377,7 +381,7 @@ const RoomPage = () => {
         ({ from, ans }) => {
             peer.setLocalDescription(ans);
             console.log("Call Accepted!");
-            sendStreams(); // Automatically send streams once the call is accepted
+            sendStreams();
         },
         [sendStreams]
     );
