@@ -325,6 +325,11 @@ const RoomPage = () => {
     const handleUserJoined = useCallback(({ email, id }) => {
         console.log(`Email ${email} joined room`);
         setRemoteSocketId(id);
+
+        // Automatically call the user if a remote user joins
+        if (id) {
+            handleCallUser();
+        }
     }, []);
 
     const handleCallUser = useCallback(async () => {
@@ -372,7 +377,7 @@ const RoomPage = () => {
         ({ from, ans }) => {
             peer.setLocalDescription(ans);
             console.log("Call Accepted!");
-            sendStreams();
+            sendStreams(); // Automatically send streams once the call is accepted
         },
         [sendStreams]
     );
@@ -446,25 +451,6 @@ const RoomPage = () => {
             <h4 className="text-lg mb-4">
                 {remoteSocketId ? "Connected" : "No one in room"}
             </h4>
-
-            <div className="space-x-4 mb-4">
-                {myStream && (
-                    <button
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        onClick={sendStreams}
-                    >
-                        Send Stream
-                    </button>
-                )}
-                {remoteSocketId && (
-                    <button
-                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                        onClick={handleCallUser}
-                    >
-                        CALL
-                    </button>
-                )}
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {myStream && (
