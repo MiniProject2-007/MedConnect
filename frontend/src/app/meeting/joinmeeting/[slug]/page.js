@@ -6,7 +6,7 @@ const JoinMeetingPage = ({ params }) => {
     const { slug } = params;
     return (
         <div className="flex flex-col md:pl-32 py-2  min-h-screen">
-            <JoinMeeting slug={slug} />
+            <LobbyScreen slug={slug} />
         </div>
     );
 };

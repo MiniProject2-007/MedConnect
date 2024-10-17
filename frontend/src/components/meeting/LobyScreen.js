@@ -1,14 +1,9 @@
-"use client";
-
+'use client';
 import React, { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSocket } from "../HOC/SocketProvider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 
-const LobbyScreen = () => {
+const LobbyScreen = ({ slug }) => {
     const [email, setEmail] = useState("");
     const [room, setRoom] = useState("");
 
@@ -25,10 +20,10 @@ const LobbyScreen = () => {
 
     const handleJoinRoom = useCallback(
         (data) => {
-            const { room } = data;
-            router.push(`/meeting/${room}`);
+            const { email, room } = data;
+            router.push(`/meeting/live/${slug}`);
         },
-        [router]
+        []
     );
 
     useEffect(() => {
@@ -39,46 +34,60 @@ const LobbyScreen = () => {
     }, [socket, handleJoinRoom]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <Card className="w-[350px] sm:w-[400px]">
-                <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center text-gray-800">
-                        Join a Room
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmitForm} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="border-[#FF7F50] focus:ring-[#FF7F50]"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="room">Room Number</Label>
-                            <Input
-                                type="text"
-                                id="room"
-                                value={room}
-                                onChange={(e) => setRoom(e.target.value)}
-                                className="border-[#FF7F50] focus:ring-[#FF7F50]"
-                                required
-                            />
-                        </div>
-                        <Button
-                            type="submit"
-                            className="w-full bg-[#FF7F50] text-white hover:bg-[#FF9F70]"
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
+            <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+                <h1 className="text-2xl font-bold text-center text-gray-800 mb-8">
+                    Join Meeting Room
+                </h1>
+                <form onSubmit={handleSubmitForm} className="space-y-6">
+                    <div className="space-y-2">
+                        <label 
+                            htmlFor="email" 
+                            className="block text-sm font-medium text-gray-700"
                         >
-                            Join Room
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
+                            Email Address
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                            required
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label 
+                            htmlFor="room" 
+                            className="block text-sm font-medium text-gray-700"
+                        >
+                            Room Number
+                        </label>
+                        <input
+                            type="text"
+                            id="room"
+                            value={room}
+                            onChange={(e) => setRoom(e.target.value)}
+                            placeholder="Enter room number"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                    >
+                        Join Meeting
+                    </button>
+                </form>
+            </div>
+
+            <footer className="mt-8 text-center text-sm text-gray-500">
+                Make sure you allow camera and microphone access
+            </footer>
         </div>
     );
 };
