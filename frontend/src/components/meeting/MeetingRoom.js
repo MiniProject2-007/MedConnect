@@ -212,7 +212,7 @@ const MeetingRoom = ({ slug }) => {
             </div>
         );
     }
-    if (!isCallStarted && remoteSocketId) {
+    if (remoteSocketId && !isCallStarted) {
         return (
             <div className="w-full h-screen flex flex-col items-center justify-center bg-gray-200">
                 <Button
