@@ -87,12 +87,9 @@ const MeetingRoom = ({ slug }) => {
 
     const handleCallAccepted = useCallback(
         ({ from, ans }) => {
-            // Ensure that the peer connection is expecting an answer
-            if (peer.peer.signalingState === "have-local-offer") {
-                peer.setLocalDescription(ans);
-                console.log("Call Accepted!");
-                sendStreams();
-            }
+            peer.setLocalDescription(ans);
+            console.log("Call Accepted!");
+            sendStreams();
         },
         [sendStreams]
     );
