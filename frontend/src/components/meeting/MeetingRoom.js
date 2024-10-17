@@ -342,8 +342,9 @@ const RoomPage = () => {
                 video: true,
             });
             setMyStream(stream);
-
+    
             const offer = await peer.getOffer();
+            await peer.setLocalDescription(offer);  // Set local description for the offer
             socket.emit("user:call", { to: remoteSocketId, offer });
         } catch (error) {
             console.error("Error accessing media devices:", error);
@@ -359,9 +360,15 @@ const RoomPage = () => {
                     video: true,
                 });
                 setMyStream(stream);
-                console.log(`Incoming Call`, from, offer);
-                const ans = await peer.getAnswer(offer);
-                socket.emit("call:accepted", { to: from, ans });
+    
+                console.log(`Incoming Call from`, from, offer);
+    
+                // Set remote offer first before creating an answer
+                await peer.setRemoteDescription(offer); 
+                const answer = await peer.getAnswer(); // Create an answer to the offer
+                await peer.setLocalDescription(answer);  // Set local description for the answer
+    
+                socket.emit("call:accepted", { to: from, ans: answer });
             } catch (error) {
                 console.error("Error handling incoming call:", error);
             }
