@@ -41,6 +41,7 @@ const MeetingRoom = () => {
             socket.emit("user:call", { to: remoteSocketId, offer });
             setMyStream(stream);
             sendStreams();
+            setCallStarted(true);
         } catch (error) {
             console.error("Error accessing media devices:", error);
         }
