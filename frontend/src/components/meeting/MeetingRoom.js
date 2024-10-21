@@ -1,8 +1,25 @@
 "use client";
-import React, { useEffect, useCallback, useState, useRef } from "react";
-import peer from "@/services/peer";
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import {
+    Mic,
+    MicOff,
+    Video,
+    VideoOff,
+    Phone,
+    Share2,
+    MessageSquare,
+    NotebookPen,
+    Loader2,
+} from "lucide-react";
+import SideContent from "./SideContent";
+import Notes from "./Notes";
 import { useSocket } from "../HOC/SocketProvider";
-import { Loader2 } from "lucide-react";
+import peer from "@/services/peer";
+
 
 const MeetingRoom = () => {
     const socket = useSocket();
