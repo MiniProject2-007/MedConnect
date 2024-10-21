@@ -135,6 +135,7 @@ const MeetingRoom = () => {
             const remoteStream = ev.streams[0];
             console.log("GOT TRACKS!!");
             setRemoteStream(remoteStream);
+            remoteVideoRef.current.srcObject = remoteStream;
         };
 
         peer.peer.addEventListener("track", handleTrack);
