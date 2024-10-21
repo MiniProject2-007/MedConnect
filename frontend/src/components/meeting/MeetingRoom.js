@@ -176,7 +176,7 @@ const MeetingRoom = () => {
                         Waiting for participant...
                     </p>
                 </div>
-            ) : remoteSocketId && !myStream ? (
+            ) : remoteSocketId && !callStarted ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200">
                     <button
                         onClick={handleCallUser}
