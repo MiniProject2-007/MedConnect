@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const WhiteBoard = require("./models/Whiteboard");
 
 const app = express();
 const server = http.createServer(app);
@@ -20,15 +21,15 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
     console.log(`Socket Connected`, socket.id);
     socket.on("room:join", (data) => {
-        const { email, slug:room} = data;
-        console.log("room:join", email, room,socket.id);
+        const { email, slug: room } = data;
+        console.log("room:join", email, room, socket.id);
         socket.join(room);
         io.to(room).emit("user:joined", { email, id: socket.id });
         io.to(room).emit("room:join", data);
     });
 
     socket.on("user:call", ({ to, offer }) => {
-        console.log("user:call", to,offer);
+        console.log("user:call", to, offer);
         io.to(to).emit("incomming:call", { from: socket.id, offer });
     });
 
@@ -45,6 +46,20 @@ io.on("connection", (socket) => {
     socket.on("peer:nego:done", ({ to, ans }) => {
         console.log("peer:nego:done", ans);
         io.to(to).emit("peer:nego:final", { from: socket.id, ans });
+    });
+    socket.on("whiteboardUpdate", (data) => {
+        console.log("whiteboardUpdate", data);
+        socket.broadcast.emit("whiteboardUpdate", data);
+    });
+
+    socket.on("saveWhiteboard", async (boardData) => {
+        const newWhiteboard = new WhiteBoard({
+            slug: socket.id,
+            appointmentId: socket.id,
+            data: boardData,
+        });
+        await newWhiteboard.save();
+        console.log("Whiteboard saved");
     });
 });
 

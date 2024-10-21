@@ -1,13 +1,19 @@
-'use client';
+"use client";
 import { Menu } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
-
+import { useAuth } from "@clerk/nextjs";
 const Header = () => {
-    const router = useRouter();
-    if(router.pathname === "/") {
+    const pathname = usePathname();
+    const { userId } = useAuth();
+    if (
+        pathname === "/" ||
+        pathname.includes("/meeting/live/") ||
+        !userId ||
+        pathname.includes("/auth") ||
+        pathname.includes("whiteboard")
+    )
         return null;
-    };
     return (
         <div className="flex items-center justify-between bg-white shadow-sm p-4 md:hidden">
             <Menu

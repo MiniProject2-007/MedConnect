@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const whiteBoardSchema = new mongoose.Schema(
     {
@@ -23,4 +23,4 @@ const whiteBoardSchema = new mongoose.Schema(
 
 const WhiteBoard = mongoose.model("WhiteBoard", whiteBoardSchema);
 
-export default WhiteBoard;
+module.exports = WhiteBoard;

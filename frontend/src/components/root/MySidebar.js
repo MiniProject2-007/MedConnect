@@ -38,7 +38,8 @@ export default function MySidebar() {
         pathname === "/" ||
         pathname.includes("/meeting/live/") ||
         !userId ||
-        pathname.includes("/auth")
+        pathname.includes("/auth") ||
+        pathname.includes("whiteboard")
     )
         return null;
 

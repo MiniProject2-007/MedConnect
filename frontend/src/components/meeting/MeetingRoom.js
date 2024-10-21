@@ -14,13 +14,15 @@ import {
     MessageSquare,
     NotebookPen,
     Loader2,
+    Presentation,
 } from "lucide-react";
 import SideContent from "./SideContent";
 import Notes from "./Notes";
 import { useSocket } from "../HOC/SocketProvider";
 import peer from "@/services/peer";
+import { useRouter } from "next/navigation";
 
-const MeetingRoom = () => {
+const MeetingRoom = ({ slug }) => {
     const socket = useSocket();
     const [remoteSocketId, setRemoteSocketId] = useState(null);
     const [myStream, setMyStream] = useState(null);
@@ -32,6 +34,7 @@ const MeetingRoom = () => {
 
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
+    const router = useRouter();
 
     // Update video refs when streams change
     useEffect(() => {
@@ -240,8 +243,13 @@ const MeetingRoom = () => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
+                                    onClick={() => {
+                                        window.open(
+                                            `/meeting/whiteboard/${slug}`
+                                        );
+                                    }}
                                 >
-                                    <Share2 className="w-4 h-4" />
+                                    <Presentation className="w-4 h-4" />
                                 </Button>
                                 <Sheet
                                     open={isSheetOpen}
