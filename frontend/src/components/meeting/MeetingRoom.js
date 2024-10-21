@@ -169,6 +169,13 @@ const MeetingRoom = () => {
 
     return (
         <div className="w-full h-screen relative">
+            <video
+                id="remote-video"
+                className={`w-full h-full ${!callStarted ? "hidden" : ""}`}
+                ref={remoteVideoRef}
+                playsInline
+                autoPlay
+            />
             {!remoteSocketId ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200">
                     <Loader2 className="w-12 h-12 animate-spin text-[#FF7F50]" />
@@ -187,13 +194,6 @@ const MeetingRoom = () => {
                 </div>
             ) : (
                 <>
-                    <video
-                        id="remote-video"
-                        className="w-full h-full"
-                        ref={remoteVideoRef}
-                        playsInline
-                        autoPlay
-                    />
                     <div className="absolute right-4 bottom-20 h-48 w-64 bg-gray-200 rounded-lg">
                         <video
                             className="h-48 rounded-lg"
