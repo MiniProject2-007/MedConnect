@@ -77,8 +77,10 @@ const MeetingRoom = () => {
                 });
                 setMyStream(stream);
                 console.log(`Incoming Call`, from, offer);
+                await peer.setRemoteDescription(offer);  // Ensure correct order in SDP
                 const ans = await peer.getAnswer(offer);
                 socket.emit("call:accepted", { to: from, ans });
+                sendStreams();
             } catch (error) {
                 console.error("Error handling incoming call:", error);
             }
@@ -95,10 +97,14 @@ const MeetingRoom = () => {
     }, [myStream]);
 
     const handleCallAccepted = useCallback(
-        ({ from, ans }) => {
-            peer.setLocalDescription(ans);
-            console.log("Call Accepted!");
-            sendStreams();
+        async ({ from, ans }) => {
+            try {
+                await peer.setRemoteDescription(ans);  // Ensure setting remote description properly
+                console.log("Call Accepted!");
+                sendStreams();
+            } catch (error) {
+                console.error("Error setting remote description:", error);
+            }
         },
         [sendStreams]
     );
@@ -111,31 +117,36 @@ const MeetingRoom = () => {
     useEffect(() => {
         peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
         return () => {
-            peer.peer.removeEventListener(
-                "negotiationneeded",
-                handleNegoNeeded
-            );
+            peer.peer.removeEventListener("negotiationneeded", handleNegoNeeded);
         };
     }, [handleNegoNeeded]);
 
     const handleNegoNeedIncomming = useCallback(
         async ({ from, offer }) => {
-            const ans = await peer.getAnswer(offer);
-            socket.emit("peer:nego:done", { to: from, ans });
+            try {
+                await peer.setRemoteDescription(offer);  // Set remote description for new offer
+                const ans = await peer.getAnswer(offer);
+                socket.emit("peer:nego:done", { to: from, ans });
+            } catch (error) {
+                console.error("Error during renegotiation:", error);
+            }
         },
         [socket]
     );
 
     const handleNegoNeedFinal = useCallback(async ({ ans }) => {
-        await peer.setLocalDescription(ans);
+        try {
+            await peer.setRemoteDescription(ans);  // Handle final negotiation answer
+        } catch (error) {
+            console.error("Error in final negotiation:", error);
+        }
     }, []);
 
     useEffect(() => {
         const handleTrack = (ev) => {
-            const remoteStream = ev.streams[0];
-            console.log("GOT TRACKS!!");
-            setRemoteStream(remoteStream);
-            remoteVideoRef.current.srcObject = remoteStream;
+            const [stream] = ev.streams;
+            setRemoteStream(stream);
+            remoteVideoRef.current.srcObject = stream;
         };
 
         peer.peer.addEventListener("track", handleTrack);
@@ -256,7 +267,7 @@ const MeetingRoom = () => {
                                             <MessageSquare className="w-4 h-4" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent side="right">
+                                    <SheetContent>
                                         <SideContent />
                                     </SheetContent>
                                 </Sheet>
