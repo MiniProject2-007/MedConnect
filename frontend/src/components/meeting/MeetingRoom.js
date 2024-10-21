@@ -265,7 +265,7 @@ const MeetingRoom = ({ slug }) => {
                                         </Button>
                                     </SheetTrigger>
                                     <SheetContent side="right">
-                                        <SideContent />
+                                        <SideContent roomId={slug} />
                                     </SheetContent>
                                 </Sheet>
                                 <Drawer>

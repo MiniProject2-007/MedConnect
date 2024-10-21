@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { MessageSquare, FileUp } from "lucide-react";
 import { useState } from "react";
 
-const SideContent = () => {
+const SideContent = ({roomId}) => {
     const [newMessage, setNewMessage] = useState("");
     const [messages, setMessages] = useState([
         { id: 1, sender: "Doctor", content: "Hello, how can I help you today?" },
