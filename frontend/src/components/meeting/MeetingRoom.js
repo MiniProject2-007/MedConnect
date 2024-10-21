@@ -20,13 +20,16 @@ import Notes from "./Notes";
 import { useSocket } from "../HOC/SocketProvider";
 import peer from "@/services/peer";
 
-
 const MeetingRoom = () => {
     const socket = useSocket();
     const [remoteSocketId, setRemoteSocketId] = useState(null);
-    const [myStream, setMyStream] = useState();
-    const [remoteStream, setRemoteStream] = useState();
+    const [myStream, setMyStream] = useState(null);
+    const [remoteStream, setRemoteStream] = useState(null);
     const [callStarted, setCallStarted] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const [isVideoOn, setIsVideoOn] = useState(true);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
 
@@ -173,8 +176,13 @@ const MeetingRoom = () => {
                     </p>
                 </div>
             ) : remoteSocketId && !callStarted ? (
-                <div>
-                    <button onClick={handleCallUser}>Call</button>
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200">
+                    <button
+                        onClick={handleCallUser}
+                        className="px-4 py-2 bg-[#FF7F50] text-white rounded-lg"
+                    >
+                        Start Call
+                    </button>
                 </div>
             ) : (
                 <>
