@@ -53,6 +53,7 @@ const MeetingRoom = () => {
 
     const handleCallUser = useCallback(async () => {
         try {
+            setCallStarted(true);
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
                 video: true,
@@ -61,7 +62,6 @@ const MeetingRoom = () => {
             socket.emit("user:call", { to: remoteSocketId, offer });
             setMyStream(stream);
             sendStreams();
-            setCallStarted(true);
         } catch (error) {
             console.error("Error accessing media devices:", error);
         }
@@ -77,10 +77,8 @@ const MeetingRoom = () => {
                 });
                 setMyStream(stream);
                 console.log(`Incoming Call`, from, offer);
-                await peer.setRemoteDescription(offer);  // Ensure correct order in SDP
                 const ans = await peer.getAnswer(offer);
                 socket.emit("call:accepted", { to: from, ans });
-                sendStreams();
             } catch (error) {
                 console.error("Error handling incoming call:", error);
             }
@@ -97,14 +95,10 @@ const MeetingRoom = () => {
     }, [myStream]);
 
     const handleCallAccepted = useCallback(
-        async ({ from, ans }) => {
-            try {
-                await peer.setRemoteDescription(ans);  // Ensure setting remote description properly
-                console.log("Call Accepted!");
-                sendStreams();
-            } catch (error) {
-                console.error("Error setting remote description:", error);
-            }
+        ({ from, ans }) => {
+            peer.setLocalDescription(ans);
+            console.log("Call Accepted!");
+            sendStreams();
         },
         [sendStreams]
     );
@@ -117,36 +111,31 @@ const MeetingRoom = () => {
     useEffect(() => {
         peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
         return () => {
-            peer.peer.removeEventListener("negotiationneeded", handleNegoNeeded);
+            peer.peer.removeEventListener(
+                "negotiationneeded",
+                handleNegoNeeded
+            );
         };
     }, [handleNegoNeeded]);
 
     const handleNegoNeedIncomming = useCallback(
         async ({ from, offer }) => {
-            try {
-                await peer.setRemoteDescription(offer);  // Set remote description for new offer
-                const ans = await peer.getAnswer(offer);
-                socket.emit("peer:nego:done", { to: from, ans });
-            } catch (error) {
-                console.error("Error during renegotiation:", error);
-            }
+            const ans = await peer.getAnswer(offer);
+            socket.emit("peer:nego:done", { to: from, ans });
         },
         [socket]
     );
 
     const handleNegoNeedFinal = useCallback(async ({ ans }) => {
-        try {
-            await peer.setRemoteDescription(ans);  // Handle final negotiation answer
-        } catch (error) {
-            console.error("Error in final negotiation:", error);
-        }
+        await peer.setLocalDescription(ans);
     }, []);
 
     useEffect(() => {
         const handleTrack = (ev) => {
-            const [stream] = ev.streams;
-            setRemoteStream(stream);
-            remoteVideoRef.current.srcObject = stream;
+            const remoteStream = ev.streams[0];
+            console.log("GOT TRACKS!!");
+            setRemoteStream(remoteStream);
+            document.getElementById("remote-video").srcObject = remoteStream;
         };
 
         peer.peer.addEventListener("track", handleTrack);
@@ -267,7 +256,7 @@ const MeetingRoom = () => {
                                             <MessageSquare className="w-4 h-4" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent>
+                                    <SheetContent side="right">
                                         <SideContent />
                                     </SheetContent>
                                 </Sheet>
