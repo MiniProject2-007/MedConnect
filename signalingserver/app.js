@@ -75,6 +75,11 @@ io.on("connection", (socket) => {
         io.to(room).emit("chat:message", message);
     });
 
+    socket.on("file:upload", (data) => {
+        const { room, file } = data;
+        console.log("file:upload", room);
+        io.to(room).emit("file:upload", file);
+    });
     
     socket.on("disconnect", () => {
         console.log("Socket Disconnected", socket.id);

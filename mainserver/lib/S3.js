@@ -12,7 +12,7 @@ const client = new S3Client({
 export const uploadFile = async (file, key) => {
     try {
         const command = new PutObjectCommand({
-            Bucket: process.env.S3_BUCKET,
+            Bucket: process.env.S3_BUCKET_NAME,
             Key: key,
             Body: file.buffer,
             ContentType: file.mimetype,
@@ -31,7 +31,7 @@ export const uploadFile = async (file, key) => {
 export const getPresignedUrl = async (key) => {
     try {
         const object = new GetObjectCommand({
-            Bucket: process.env.S3_BUCKET,
+            Bucket: process.env.S3_BUCKET_NAME,
             Key: key,
         })
 

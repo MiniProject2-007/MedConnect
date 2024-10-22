@@ -6,21 +6,27 @@ import { Input } from "@/components/ui/input";
 import { MessageSquare, FileUp } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useSocket } from "../HOC/SocketProvider";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import { addMessage } from "@/lib/redux/features/chatSlice";
 
 const SideContent = ({ roomId }) => {
     const [newMessage, setNewMessage] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [files, setFiles] = useState([]);
     const messages = useAppSelector((state) => state.chat.chat);
     const dispatch = useAppDispatch();
     const { user } = useUser();
     const socket = useSocket();
     const scrollAreaRef = useRef(null);
-
+    const { getToken, userId } = useAuth();
     useEffect(() => {
         socket.on("chat:message", (message) => {
             dispatch(addMessage(message));
+        });
+
+        socket.on("file:upload", (file) => {
+            fetchFiles();
         });
 
         return () => {
@@ -31,10 +37,16 @@ const SideContent = ({ roomId }) => {
     // Auto scroll to bottom when new messages arrive
     useEffect(() => {
         if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+            scrollAreaRef.current.scrollTop =
+                scrollAreaRef.current.scrollHeight;
         }
     }, [messages]);
 
+    useEffect(() => {
+        fetchFiles();
+    }, []);
+
+    // Send chat message
     const sendMessage = (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
@@ -51,14 +63,74 @@ const SideContent = ({ roomId }) => {
             room: roomId,
             message: messageData,
         });
-        
+
         setNewMessage("");
     };
 
     const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             sendMessage(e);
+        }
+    };
+
+    // File upload using fetch
+    const uploadFile = async () => {
+        if (!selectedFile) return;
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("ownerId", userId);
+        formData.append("meetingId", roomId);
+        formData.append("description", "File uploaded in chat");
+
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/record/createRecord`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${await getToken()}`,
+                    },
+                    body: formData,
+                }
+            );
+
+            if (response.ok) {
+                const result = await response.json();
+                socket.emit("file:upload", {
+                    room: roomId,
+                    file: result,
+                });
+                console.log("File uploaded successfully", result);
+                setSelectedFile(null); // Reset file input after upload
+            } else {
+                console.error("Failed to upload file");
+            }
+        } catch (error) {
+            console.error("Error uploading file:", error);
+        }
+    };
+
+    const fetchFiles = async () => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/record/getRecords?meetingId=${roomId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${await getToken()}`,
+                    },
+                }
+            );
+
+            if (response.ok) {
+                const result = await response.json();
+                setFiles(result);
+            } else {
+                console.error("Failed to fetch files");
+            }
+        } catch (error) {
+            console.error("Error fetching files:", error);
         }
     };
 
@@ -79,29 +151,28 @@ const SideContent = ({ roomId }) => {
                 </TabsTrigger>
             </TabsList>
 
+            {/* Chat tab */}
             <TabsContent
                 value="chat"
                 className="flex-1 flex flex-col h-[calc(100vh-8rem)]"
             >
                 <div className="flex-1 overflow-hidden">
-                    <ScrollArea 
-                        className="h-full pr-4" 
-                        ref={scrollAreaRef}
-                    >
+                    <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
                         <div className="flex flex-col-reverse gap-4 min-h-full">
                             {messages.map((message) => (
                                 <div
                                     key={message.id}
                                     className={`p-3 rounded-lg ${
                                         message.sender === user.username
-                                            ? 'ml-auto bg-[#FF7F50] text-white max-w-[80%]'
-                                            : 'mr-auto bg-gray-100 max-w-[80%]'
+                                            ? "ml-auto bg-[#FF7F50] text-white max-w-[80%]"
+                                            : "mr-auto bg-gray-100 max-w-[80%]"
                                     }`}
                                 >
                                     <div className="flex items-center gap-2 mb-1">
                                         <Avatar className="w-6 h-6">
                                             <AvatarFallback>
-                                                {message.sender?.[0]?.toUpperCase() || '?'}
+                                                {message.sender?.[0]?.toUpperCase() ||
+                                                    "?"}
                                             </AvatarFallback>
                                             {message.profileimg && (
                                                 <AvatarImage
@@ -110,29 +181,37 @@ const SideContent = ({ roomId }) => {
                                                 />
                                             )}
                                         </Avatar>
-                                        <span className={`text-sm font-medium ${
-                                            message.sender === user.username
-                                                ? 'text-white'
-                                                : 'text-gray-700'
-                                        }`}>
+                                        <span
+                                            className={`text-sm font-medium ${
+                                                message.sender === user.username
+                                                    ? "text-white"
+                                                    : "text-gray-700"
+                                            }`}
+                                        >
                                             {message.sender}
                                         </span>
-                                        <span className={`text-xs ${
-                                            message.sender === user.username
-                                                ? 'text-white/70'
-                                                : 'text-gray-500'
-                                        }`}>
-                                            {new Date(message.timestamp).toLocaleTimeString([], {
-                                                hour: '2-digit',
-                                                minute: '2-digit'
+                                        <span
+                                            className={`text-xs ${
+                                                message.sender === user.username
+                                                    ? "text-white/70"
+                                                    : "text-gray-500"
+                                            }`}
+                                        >
+                                            {new Date(
+                                                message.timestamp
+                                            ).toLocaleTimeString([], {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
                                             })}
                                         </span>
                                     </div>
-                                    <p className={`break-words ${
-                                        message.sender === user.username
-                                            ? 'text-white'
-                                            : 'text-gray-800'
-                                    }`}>
+                                    <p
+                                        className={`break-words ${
+                                            message.sender === user.username
+                                                ? "text-white"
+                                                : "text-gray-800"
+                                        }`}
+                                    >
                                         {message.message}
                                     </p>
                                 </div>
@@ -161,30 +240,42 @@ const SideContent = ({ roomId }) => {
                 </div>
             </TabsContent>
 
+            {/* File tab */}
             <TabsContent value="files" className="h-full">
                 <div className="p-4 flex flex-col h-full">
-                    <Button className="w-full mb-4 bg-[#FF7F50] text-white hover:bg-[#FF9F70]">
+                    <Input
+                        type="file"
+                        onChange={(e) => setSelectedFile(e.target.files[0])}
+                        className="mb-4"
+                    />
+                    <Button
+                        onClick={uploadFile}
+                        className="bg-[#FF7F50] text-white hover:bg-[#FF9F70]"
+                        disabled={!selectedFile}
+                    >
                         <FileUp className="mr-2 h-4 w-4" /> Upload File
                     </Button>
                     <ScrollArea className="flex-1">
                         <div className="space-y-2">
-                            {[
-                                "Patient_History.pdf",
-                                "Lab_Results.jpg",
-                                "Treatment_Plan.docx",
-                            ].map((file) => (
+                            {files.map((file) => (
                                 <div
-                                    key={file}
-                                    className="flex items-center justify-between p-3 bg-white rounded-lg shadow hover:bg-gray-50 transition-colors"
+                                    key={file._id}
+                                    className="flex items-center justify-between p-2 bg-gray-100 rounded-lg"
                                 >
-                                    <span className="text-gray-700">{file}</span>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-[#FF7F50] hover:bg-[#FF7F50]/10"
+                                    <div className="flex items-center gap-2">
+                                        <FileUp className="w-4 h-4" />
+                                        <span className="text-sm">
+                                            {file.name}
+                                        </span>
+                                    </div>
+                                    <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[#FF7F50] hover:underline"
                                     >
-                                        View
-                                    </Button>
+                                        Download
+                                    </a>
                                 </div>
                             ))}
                         </div>

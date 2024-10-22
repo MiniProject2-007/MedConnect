@@ -9,7 +9,11 @@ const recordSchema = new mongoose.Schema(
         sharedWith: {
             type: [String],
         },
-        title: {
+        meetingId: {
+            type: String,
+            required: true,
+        },
+        name: {
             type: String,
             required: true,
         },
@@ -20,8 +24,9 @@ const recordSchema = new mongoose.Schema(
             type: String,
             required: true,
             enum: ["prescription", "report", "recording", "other"],
+            default: "other",
         },
-        file: {
+        key: {
             type: String,
             required: true,
         },
