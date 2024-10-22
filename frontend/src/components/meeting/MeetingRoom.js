@@ -216,6 +216,7 @@ const MeetingRoom = ({ slug }) => {
                             playsInline
                             autoPlay
                             ref={localVideoRef}
+                            muted
                         />
                     </div>
                     <Card className="absolute bottom-0 left-0 w-full">
