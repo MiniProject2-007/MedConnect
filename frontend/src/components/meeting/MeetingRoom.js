@@ -282,20 +282,6 @@ const MeetingRoom = ({ slug }) => {
                                         <SideContent roomId={slug} />
                                     </SheetContent>
                                 </Sheet>
-                                <Drawer>
-                                    <DrawerTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                        >
-                                            <NotebookPen className="w-4 h-4" />
-                                        </Button>
-                                    </DrawerTrigger>
-                                    <DrawerContent>
-                                        <Notes />
-                                    </DrawerContent>
-                                </Drawer>
                             </div>
                         </CardContent>
                     </Card>
