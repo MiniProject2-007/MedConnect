@@ -18,25 +18,25 @@ const carouselItems = [
   {
     title: "Book Your Appointment",
     description: "Easy and quick online booking for your medical needs",
-    image: "/hero.png",
+    image: "/Appoinment.png",
     cta: "Book Now",
   },
   {
     title: "Expert Doctors",
     description: "Consult with our team of experienced specialists",
-    image: "/hero2.png",
+    image: "/Expert.png",
     cta: "Find a Doctor",
   },
   {
     title: "24/7 Support",
     description: "Round-the-clock assistance for your health concerns",
-    image: "/hero.png",
+    image: "/24Support.png",
     cta: "Contact Us",
   },
   {
     title: "Telemedicine Services",
     description: "Get medical advice from the comfort of your home",
-    image: "/hero2.png",
+    image: "/telemedicine.png",
     cta: "Start Consultation",
   },
 ]
