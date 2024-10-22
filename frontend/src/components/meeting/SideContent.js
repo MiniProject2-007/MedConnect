@@ -7,11 +7,13 @@ import { MessageSquare, FileUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSocket } from "../HOC/SocketProvider";
 import { useUser } from "@clerk/nextjs";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { setChat } from "@/lib/redux/features/chatSlice";
 
 const SideContent = ({ roomId }) => {
     const [newMessage, setNewMessage] = useState("");
-    const [messages, setMessages] = useState([]);
-
+    const messages = useAppSelector((state) => state.chat.messages);
+    const dispatch = useAppDispatch();
     const { user } = useUser();
     const socket = useSocket();
 
@@ -19,7 +21,7 @@ const SideContent = ({ roomId }) => {
         socket.emit("chat:joined", { room: roomId });
 
         socket.on("chat:message", (message) => {
-            setMessages((prev) => [message, ...prev]);
+            dispatch(setChat([...messages, message]));
         });
 
         return () => {
