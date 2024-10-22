@@ -6,15 +6,10 @@ import { Input } from "@/components/ui/input";
 import { MessageSquare, FileUp } from "lucide-react";
 import { useState } from "react";
 
-const SideContent = ({roomId}) => {
+const SideContent = ({ roomId }) => {
     const [newMessage, setNewMessage] = useState("");
-    const [messages, setMessages] = useState([
-        { id: 1, sender: "Doctor", content: "Hello, how can I help you today?" },
-        { id: 2, sender: "Patient", content: "I'm feeling a bit anxious about the upcoming procedure." },
-        { id: 3, sender: "Doctor", content: "Don't worry, I'll be with you every step of the way." },
-    ]);
+    const [messages, setMessages] = useState([]);
 
-    
     return (
         <Tabs defaultValue="chat" className="flex-grow flex flex-col">
             <TabsList className="grid w-full grid-cols-2">
@@ -55,7 +50,7 @@ const SideContent = ({roomId}) => {
                         </div>
                     ))}
                 </ScrollArea>
-                <form  className="mt-4">
+                <form className="mt-4">
                     <div className="flex space-x-2">
                         <Input
                             value={newMessage}
