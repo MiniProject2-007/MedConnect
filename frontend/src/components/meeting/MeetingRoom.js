@@ -548,7 +548,7 @@ const MeetingRoom = ({ slug }) => {
                     <Card className="absolute bottom-0 left-0 w-full">
                         <CardContent className="p-4">
                             <div className="flex flex-wrap justify-center gap-4">
-                                <Button
+                                {/* <Button
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
@@ -571,7 +571,7 @@ const MeetingRoom = ({ slug }) => {
                                     ) : (
                                         <VideoOff className="w-4 h-4" />
                                     )}
-                                </Button>
+                                </Button> */}
                                 <Button
                                     variant="outline"
                                     size="sm"
