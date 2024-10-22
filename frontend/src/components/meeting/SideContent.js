@@ -19,7 +19,7 @@ const SideContent = ({ roomId }) => {
         socket.emit("chat:joined", { room: roomId });
 
         socket.on("chat:message", (message) => {
-            setMessages((prev) => [...prev, message]);
+            setMessages((prev) => [message, ...prev]);
         });
 
         return () => {
@@ -61,7 +61,24 @@ const SideContent = ({ roomId }) => {
                 value="chat"
                 className="h-full p-2 flex flex-col justify-between"
             >
-                <ScrollArea className="flex-grow ">
+                <form className="mb-4">
+                    <div className="flex space-x-2">
+                        <Input
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Type a message..."
+                            className="border-[#FF7F50] focus:ring-[#FF7F50]"
+                        />
+                        <Button
+                            type="submit"
+                            className="bg-[#FF7F50] text-white hover:bg-[#FF9F70]"
+                            onClick={sendMessage}
+                        >
+                            Send
+                        </Button>
+                    </div>
+                </form>
+                <ScrollArea className="flex flex-col gap-4 max-h-[90vh]">
                     {messages.map((message) => (
                         <div
                             key={message.id}
@@ -79,27 +96,12 @@ const SideContent = ({ roomId }) => {
                                     {message.sender}
                                 </span>
                             </div>
-                            <p className="text-gray-700 pl-6 py-2">{message.message}</p>
+                            <p className="text-gray-700 pl-6 py-2">
+                                {message.message}
+                            </p>
                         </div>
                     ))}
                 </ScrollArea>
-                <form className="mt-4">
-                    <div className="flex space-x-2">
-                        <Input
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type a message..."
-                            className="border-[#FF7F50] focus:ring-[#FF7F50]"
-                        />
-                        <Button
-                            type="submit"
-                            className="bg-[#FF7F50] text-white hover:bg-[#FF9F70]"
-                            onClick={sendMessage}
-                        >
-                            Send
-                        </Button>
-                    </div>
-                </form>
             </TabsContent>
             <TabsContent value="files" className="flex-grow p-2 flex flex-col">
                 <Button className="w-full mb-4 bg-[#FF7F50] text-white hover:bg-[#FF9F70]">
