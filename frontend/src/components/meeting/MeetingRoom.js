@@ -33,12 +33,15 @@ const MeetingRoom = ({ slug }) => {
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOn, setIsVideoOn] = useState(true);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const messages = useAppSelector((state) => state.chat.chat);
     const dispatch = useAppDispatch();
+
 
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
     const router = useRouter();
 
+    // Update video refs when streams change
     useEffect(() => {
         if (myStream && localVideoRef.current) {
             localVideoRef.current.srcObject = myStream;
@@ -155,9 +158,6 @@ const MeetingRoom = ({ slug }) => {
         socket.on("call:accepted", handleCallAccepted);
         socket.on("peer:nego:needed", handleNegoNeedIncomming);
         socket.on("peer:nego:final", handleNegoNeedFinal);
-        socket.on("chat:message", (message) => {
-            dispatch(addMessage(message));
-        });
 
         return () => {
             socket.off("user:joined", handleUserJoined);
@@ -165,7 +165,6 @@ const MeetingRoom = ({ slug }) => {
             socket.off("call:accepted", handleCallAccepted);
             socket.off("peer:nego:needed", handleNegoNeedIncomming);
             socket.off("peer:nego:final", handleNegoNeedFinal);
-            socket.off("chat:message");
         };
     }, [
         socket,
@@ -174,31 +173,16 @@ const MeetingRoom = ({ slug }) => {
         handleCallAccepted,
         handleNegoNeedIncomming,
         handleNegoNeedFinal,
-        dispatch,
     ]);
+    useEffect(() => {
+        socket.on("chat:message", (message) => {
+            dispatch(addMessage(message));
+        });
 
-    // Toggle audio
-    const toggleAudio = useCallback(() => {
-        if (myStream) {
-            const audioTrack = myStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setIsMuted(!audioTrack.enabled);
-            }
-        }
-    }, [myStream]);
-
-    // Toggle video
-    const toggleVideo = useCallback(() => {
-        if (myStream) {
-            const videoTrack = myStream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsVideoOn(videoTrack.enabled);
-            }
-        }
-    }, [myStream]);
-
+        return () => {
+            socket.off("chat:message");
+        };
+    }, [socket, dispatch]);
     return (
         <div className="w-full h-screen relative">
             <video
@@ -241,7 +225,7 @@ const MeetingRoom = ({ slug }) => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                    onClick={toggleAudio}
+                                    onClick={() => setIsMuted(!isMuted)}
                                 >
                                     {isMuted ? (
                                         <MicOff className="w-4 h-4" />
@@ -253,7 +237,7 @@ const MeetingRoom = ({ slug }) => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                    onClick={toggleVideo}
+                                    onClick={() => setIsVideoOn(!isVideoOn)}
                                 >
                                     {isVideoOn ? (
                                         <Video className="w-4 h-4" />

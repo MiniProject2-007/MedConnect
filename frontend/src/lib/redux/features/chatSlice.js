@@ -12,6 +12,12 @@ const chatSlice = createSlice({
                 : [action.payload, ...state.chat];
         },
         addMessage: (state, action) => {
+            for(let i = 0; i < state.chat.length; i++) {
+                if(state.chat[i].id === action.payload.id) {
+                    return;
+                }
+            }
+            
             state.chat = [action.payload, ...state.chat];
         },
     },
