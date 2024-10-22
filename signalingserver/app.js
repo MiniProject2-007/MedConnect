@@ -61,6 +61,24 @@ io.on("connection", (socket) => {
         await newWhiteboard.save();
         console.log("Whiteboard saved");
     });
+
+    socket.on("chat:joined", (data) => {
+        const { room } = data;
+        console.log("chat:joined", room);
+        socket.join(room);
+        io.to(room).emit("chat:joined", data);
+    });
+
+    socket.on("chat:message", (data) => {
+        const { room, message } = data;
+        console.log("chat:message", room);
+        io.to(room).emit("chat:message", message);
+    });
+
+    
+    socket.on("disconnect", () => {
+        console.log("Socket Disconnected", socket.id);
+    });
 });
 
 server.listen(8000, () => {

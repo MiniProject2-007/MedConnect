@@ -1,14 +1,45 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, FileUp } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSocket } from "../HOC/SocketProvider";
+import { useUser } from "@clerk/nextjs";
 
 const SideContent = ({ roomId }) => {
     const [newMessage, setNewMessage] = useState("");
     const [messages, setMessages] = useState([]);
+
+    const { user } = useUser();
+    const socket = useSocket();
+
+    useEffect(() => {
+        socket.emit("chat:joined", { room: roomId });
+
+        socket.on("chat:message", (message) => {
+            setMessages((prev) => [...prev, message]);
+        });
+
+        return () => {
+            socket.off("chat:message");
+        };
+    }, []);
+
+    const sendMessage = (e) => {
+        e.preventDefault();
+        socket.emit("chat:message", {
+            room: roomId,
+            message: {
+                id: Math.random().toString(36).slice(2),
+                sender: user.username,
+                message: newMessage,
+                profileimg: user.imageUrl ? user.imageUrl : "",
+            },
+        });
+        setNewMessage("");
+    };
 
     return (
         <Tabs defaultValue="chat" className="flex-grow flex flex-col">
@@ -38,15 +69,17 @@ const SideContent = ({ roomId }) => {
                         >
                             <div className="flex items-center mb-1">
                                 <Avatar className="w-6 h-6 mr-2">
-                                    <AvatarFallback>
-                                        {message.sender[0]}
-                                    </AvatarFallback>
+                                    <AvatarFallback>{""}</AvatarFallback>
+                                    <AvatarImage
+                                        src={message.profileimg}
+                                        alt="Profile Image"
+                                    />
                                 </Avatar>
                                 <span className="font-semibold">
                                     {message.sender}
                                 </span>
                             </div>
-                            <p className="text-gray-700">{message.content}</p>
+                            <p className="text-gray-700 pl-6 py-2">{message.message}</p>
                         </div>
                     ))}
                 </ScrollArea>
@@ -61,6 +94,7 @@ const SideContent = ({ roomId }) => {
                         <Button
                             type="submit"
                             className="bg-[#FF7F50] text-white hover:bg-[#FF9F70]"
+                            onClick={sendMessage}
                         >
                             Send
                         </Button>
