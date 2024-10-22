@@ -330,6 +330,44 @@ const MeetingRoom = ({ slug }) => {
     const remoteVideoRef = useRef();
     const router = useRouter();
 
+    // Handle muting/unmuting audio
+    const handleToggleAudio = useCallback(() => {
+        if (myStream) {
+            const audioTrack = myStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                setIsMuted(!audioTrack.enabled);
+            }
+        }
+    }, [myStream]);
+
+    // Handle turning video on/off
+    const handleToggleVideo = useCallback(() => {
+        if (myStream) {
+            const videoTrack = myStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                setIsVideoOn(!isVideoOn);
+            }
+        }
+    }, [myStream, isVideoOn]);
+
+    // Handle ending the call
+    const handleEndCall = useCallback(() => {
+        if (myStream) {
+            myStream.getTracks().forEach(track => track.stop());
+        }
+        if (remoteStream) {
+            remoteStream.getTracks().forEach(track => track.stop());
+        }
+        peer.peer.close();
+        setMyStream(null);
+        setRemoteStream(null);
+        setCallStarted(false);
+        socket.emit("call:end", { to: remoteSocketId });
+        router.push("/"); // Or wherever you want to redirect after call ends
+    }, [myStream, remoteStream, remoteSocketId, socket, router]);
+
     // Update video refs when streams change
     useEffect(() => {
         if (myStream && localVideoRef.current) {
@@ -408,10 +446,7 @@ const MeetingRoom = ({ slug }) => {
     useEffect(() => {
         peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
         return () => {
-            peer.peer.removeEventListener(
-                "negotiationneeded",
-                handleNegoNeeded
-            );
+            peer.peer.removeEventListener("negotiationneeded", handleNegoNeeded);
         };
     }, [handleNegoNeeded]);
 
@@ -432,6 +467,7 @@ const MeetingRoom = ({ slug }) => {
             const remoteStream = ev.streams[0];
             console.log("GOT TRACKS!!");
             setRemoteStream(remoteStream);
+            document.getElementById("remote-video").srcObject = remoteStream;
         };
 
         peer.peer.addEventListener("track", handleTrack);
@@ -463,7 +499,6 @@ const MeetingRoom = ({ slug }) => {
         handleNegoNeedFinal,
     ]);
 
-    // Handle chat messages
     useEffect(() => {
         socket.on("chat:message", (message) => {
             dispatch(addMessage(message));
@@ -473,38 +508,6 @@ const MeetingRoom = ({ slug }) => {
             socket.off("chat:message");
         };
     }, [socket, dispatch]);
-
-    // Mute/unmute audio functionality
-    const toggleMute = () => {
-        if (myStream) {
-            myStream.getAudioTracks().forEach((track) => {
-                track.enabled = !track.enabled;
-            });
-            setIsMuted(!isMuted);
-        }
-    };
-
-    // Turn on/off video functionality
-    const toggleVideo = () => {
-        if (myStream) {
-            myStream.getVideoTracks().forEach((track) => {
-                track.enabled = !track.enabled;
-            });
-            setIsVideoOn(!isVideoOn);
-        }
-    };
-
-    // Functionality to cut the call
-    const handleEndCall = () => {
-        if (myStream) {
-            myStream.getTracks().forEach((track) => track.stop());
-        }
-        setCallStarted(false);
-        setRemoteStream(null);
-        setRemoteSocketId(null);
-        peer.peer.close(); // Close the peer connection
-        router.push("/"); // Redirect to home or another page after the call ends
-    };
 
     return (
         <div className="w-full h-screen relative">
@@ -549,7 +552,7 @@ const MeetingRoom = ({ slug }) => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                    onClick={toggleMute}
+                                    onClick={handleToggleAudio}
                                 >
                                     {isMuted ? (
                                         <MicOff className="w-4 h-4" />
@@ -561,7 +564,7 @@ const MeetingRoom = ({ slug }) => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                    onClick={toggleVideo}
+                                    onClick={handleToggleVideo}
                                 >
                                     {isVideoOn ? (
                                         <Video className="w-4 h-4" />
@@ -572,7 +575,7 @@ const MeetingRoom = ({ slug }) => {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
+                                    className="border-red-500 hover:bg-red-600 text-red-500"
                                     onClick={handleEndCall}
                                 >
                                     <Phone className="w-4 h-4" />
@@ -581,28 +584,34 @@ const MeetingRoom = ({ slug }) => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                    onClick={() => setIsSheetOpen(!isSheetOpen)}
-                                >
-                                    <MessageSquare className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
+                                    onClick={() => {
+                                        window.open(`/meeting/whiteboard/${slug}`);
+                                    }}
                                 >
                                     <Presentation className="w-4 h-4" />
                                 </Button>
+                                <Sheet
+                                    open={isSheetOpen}
+                                    onOpenChange={setIsSheetOpen}
+                                >
+                                    <SheetTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
+                                        >
+                                            <MessageSquare className="w-4 h-4" />
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="right">
+                                        <SideContent roomId={slug} />
+                                    </SheetContent>
+                                </Sheet>
                             </div>
                         </CardContent>
                     </Card>
                 </>
             )}
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetContent side="right">
-                    <SideContent messages={messages} slug={slug} />
-                </SheetContent>
-                <SheetTrigger className="hidden">Open Sheet</SheetTrigger>
-            </Sheet>
         </div>
     );
 };
