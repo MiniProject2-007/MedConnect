@@ -4,47 +4,66 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, FileUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSocket } from "../HOC/SocketProvider";
 import { useUser } from "@clerk/nextjs";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
-import { setChat } from "@/lib/redux/features/chatSlice";
+import { addMessage } from "@/lib/redux/features/chatSlice";
 
 const SideContent = ({ roomId }) => {
     const [newMessage, setNewMessage] = useState("");
-    const messages = useAppSelector((state) => state.chat.messages);
+    const messages = useAppSelector((state) => state.chat.chat);
     const dispatch = useAppDispatch();
     const { user } = useUser();
     const socket = useSocket();
+    const scrollAreaRef = useRef(null);
 
     useEffect(() => {
-        socket.emit("chat:joined", { room: roomId });
-
         socket.on("chat:message", (message) => {
-            dispatch(setChat([...messages, message]));
+            dispatch(addMessage(message));
         });
 
         return () => {
             socket.off("chat:message");
         };
-    }, []);
+    }, [socket, dispatch]);
+
+    // Auto scroll to bottom when new messages arrive
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     const sendMessage = (e) => {
         e.preventDefault();
+        if (!newMessage.trim()) return;
+
+        const messageData = {
+            id: Math.random().toString(36).slice(2),
+            sender: user.username,
+            message: newMessage.trim(),
+            profileimg: user.imageUrl ? user.imageUrl : "",
+            timestamp: new Date().toISOString(),
+        };
+
         socket.emit("chat:message", {
             room: roomId,
-            message: {
-                id: Math.random().toString(36).slice(2),
-                sender: user.username,
-                message: newMessage,
-                profileimg: user.imageUrl ? user.imageUrl : "",
-            },
+            message: messageData,
         });
+        
         setNewMessage("");
     };
 
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage(e);
+        }
+    };
+
     return (
-        <Tabs defaultValue="chat" className="flex-grow flex flex-col">
+        <Tabs defaultValue="chat" className="flex-grow flex flex-col h-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger
                     value="chat"
@@ -59,79 +78,118 @@ const SideContent = ({ roomId }) => {
                     <FileUp className="w-4 h-4 mr-2" /> Files
                 </TabsTrigger>
             </TabsList>
+
             <TabsContent
                 value="chat"
-                className="h-full p-2 flex flex-col justify-between"
+                className="flex-1 flex flex-col h-[calc(100vh-8rem)]"
             >
-                <form className="mb-4">
-                    <div className="flex space-x-2">
+                <div className="flex-1 overflow-hidden">
+                    <ScrollArea 
+                        className="h-full pr-4" 
+                        ref={scrollAreaRef}
+                    >
+                        <div className="flex flex-col-reverse gap-4 min-h-full">
+                            {messages.map((message) => (
+                                <div
+                                    key={message.id}
+                                    className={`p-3 rounded-lg ${
+                                        message.sender === user.username
+                                            ? 'ml-auto bg-[#FF7F50] text-white max-w-[80%]'
+                                            : 'mr-auto bg-gray-100 max-w-[80%]'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Avatar className="w-6 h-6">
+                                            <AvatarFallback>
+                                                {message.sender?.[0]?.toUpperCase() || '?'}
+                                            </AvatarFallback>
+                                            {message.profileimg && (
+                                                <AvatarImage
+                                                    src={message.profileimg}
+                                                    alt={`${message.sender}'s profile`}
+                                                />
+                                            )}
+                                        </Avatar>
+                                        <span className={`text-sm font-medium ${
+                                            message.sender === user.username
+                                                ? 'text-white'
+                                                : 'text-gray-700'
+                                        }`}>
+                                            {message.sender}
+                                        </span>
+                                        <span className={`text-xs ${
+                                            message.sender === user.username
+                                                ? 'text-white/70'
+                                                : 'text-gray-500'
+                                        }`}>
+                                            {new Date(message.timestamp).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                    <p className={`break-words ${
+                                        message.sender === user.username
+                                            ? 'text-white'
+                                            : 'text-gray-800'
+                                    }`}>
+                                        {message.message}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </div>
+
+                <div className="mt-4 border-t pt-4">
+                    <form onSubmit={sendMessage} className="flex gap-2">
                         <Input
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyDown={handleKeyPress}
                             placeholder="Type a message..."
-                            className="border-[#FF7F50] focus:ring-[#FF7F50]"
+                            className="flex-1 border-[#FF7F50] focus:ring-[#FF7F50]"
                         />
                         <Button
                             type="submit"
                             className="bg-[#FF7F50] text-white hover:bg-[#FF9F70]"
-                            onClick={sendMessage}
+                            disabled={!newMessage.trim()}
                         >
                             Send
                         </Button>
-                    </div>
-                </form>
-                <ScrollArea className="flex flex-col gap-4 max-h-[90vh]">
-                    {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className="mb-4 p-2 bg-white rounded-lg shadow"
-                        >
-                            <div className="flex items-center mb-1">
-                                <Avatar className="w-6 h-6 mr-2">
-                                    <AvatarFallback>{""}</AvatarFallback>
-                                    <AvatarImage
-                                        src={message.profileimg}
-                                        alt="Profile Image"
-                                    />
-                                </Avatar>
-                                <span className="font-semibold">
-                                    {message.sender}
-                                </span>
-                            </div>
-                            <p className="text-gray-700 pl-6 py-2">
-                                {message.message}
-                            </p>
-                        </div>
-                    ))}
-                </ScrollArea>
+                    </form>
+                </div>
             </TabsContent>
-            <TabsContent value="files" className="flex-grow p-2 flex flex-col">
-                <Button className="w-full mb-4 bg-[#FF7F50] text-white hover:bg-[#FF9F70]">
-                    <FileUp className="mr-2 h-4 w-4" /> Upload File
-                </Button>
-                <ScrollArea className="flex-grow">
-                    <ul className="space-y-2">
-                        {[
-                            "Patient_History.pdf",
-                            "Lab_Results.jpg",
-                            "Treatment_Plan.docx",
-                        ].map((file) => (
-                            <li
-                                key={file}
-                                className="flex items-center justify-between p-2 bg-white rounded-lg shadow"
-                            >
-                                <span>{file}</span>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-[#FF7F50] hover:bg-gray-100 "
+
+            <TabsContent value="files" className="h-full">
+                <div className="p-4 flex flex-col h-full">
+                    <Button className="w-full mb-4 bg-[#FF7F50] text-white hover:bg-[#FF9F70]">
+                        <FileUp className="mr-2 h-4 w-4" /> Upload File
+                    </Button>
+                    <ScrollArea className="flex-1">
+                        <div className="space-y-2">
+                            {[
+                                "Patient_History.pdf",
+                                "Lab_Results.jpg",
+                                "Treatment_Plan.docx",
+                            ].map((file) => (
+                                <div
+                                    key={file}
+                                    className="flex items-center justify-between p-3 bg-white rounded-lg shadow hover:bg-gray-50 transition-colors"
                                 >
-                                    View
-                                </Button>
-                            </li>
-                        ))}
-                    </ul>
-                </ScrollArea>
+                                    <span className="text-gray-700">{file}</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-[#FF7F50] hover:bg-[#FF7F50]/10"
+                                    >
+                                        View
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                </div>
             </TabsContent>
         </Tabs>
     );

@@ -21,6 +21,8 @@ import Notes from "./Notes";
 import { useSocket } from "../HOC/SocketProvider";
 import peer from "@/services/peer";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
+import { addMessage } from "@/lib/redux/features/chatSlice";
 
 const MeetingRoom = ({ slug }) => {
     const socket = useSocket();
@@ -31,12 +33,12 @@ const MeetingRoom = ({ slug }) => {
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOn, setIsVideoOn] = useState(true);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const dispatch = useAppDispatch();
 
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
     const router = useRouter();
 
-    // Update video refs when streams change
     useEffect(() => {
         if (myStream && localVideoRef.current) {
             localVideoRef.current.srcObject = myStream;
@@ -153,6 +155,9 @@ const MeetingRoom = ({ slug }) => {
         socket.on("call:accepted", handleCallAccepted);
         socket.on("peer:nego:needed", handleNegoNeedIncomming);
         socket.on("peer:nego:final", handleNegoNeedFinal);
+        socket.on("chat:message", (message) => {
+            dispatch(addMessage(message));
+        });
 
         return () => {
             socket.off("user:joined", handleUserJoined);
@@ -160,6 +165,7 @@ const MeetingRoom = ({ slug }) => {
             socket.off("call:accepted", handleCallAccepted);
             socket.off("peer:nego:needed", handleNegoNeedIncomming);
             socket.off("peer:nego:final", handleNegoNeedFinal);
+            socket.off("chat:message");
         };
     }, [
         socket,
@@ -168,7 +174,30 @@ const MeetingRoom = ({ slug }) => {
         handleCallAccepted,
         handleNegoNeedIncomming,
         handleNegoNeedFinal,
+        dispatch,
     ]);
+
+    // Toggle audio
+    const toggleAudio = useCallback(() => {
+        if (myStream) {
+            const audioTrack = myStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                setIsMuted(!audioTrack.enabled);
+            }
+        }
+    }, [myStream]);
+
+    // Toggle video
+    const toggleVideo = useCallback(() => {
+        if (myStream) {
+            const videoTrack = myStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                setIsVideoOn(videoTrack.enabled);
+            }
+        }
+    }, [myStream]);
 
     return (
         <div className="w-full h-screen relative">
@@ -212,7 +241,7 @@ const MeetingRoom = ({ slug }) => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                    onClick={() => setIsMuted(!isMuted)}
+                                    onClick={toggleAudio}
                                 >
                                     {isMuted ? (
                                         <MicOff className="w-4 h-4" />
@@ -224,7 +253,7 @@ const MeetingRoom = ({ slug }) => {
                                     variant="outline"
                                     size="sm"
                                     className="border-[#FF7F50] text-[#FF7F50] hover:bg-gray-100"
-                                    onClick={() => setIsVideoOn(!isVideoOn)}
+                                    onClick={toggleVideo}
                                 >
                                     {isVideoOn ? (
                                         <Video className="w-4 h-4" />
