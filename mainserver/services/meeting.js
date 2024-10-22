@@ -31,6 +31,7 @@ class MeetingService {
             return null;
         }
     };
+
 }
 
 export default new MeetingService();

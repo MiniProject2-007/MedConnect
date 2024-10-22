@@ -1,13 +1,10 @@
 import React from "react";
-
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { User, MessageSquare, Calendar } from "lucide-react";
+import { User, Star } from "lucide-react";
 import BookAppointment from "../appointments/BookAppointment";
+import DoctorRatings from "./DoctorRatings";
 
-
-
-const DoctorCard = ({doctor}) => {
+const DoctorCard = ({ doctor }) => {
     return (
         <Card
             key={doctor._id}
@@ -29,14 +26,7 @@ const DoctorCard = ({doctor}) => {
                 </div>
             </CardContent>
             <CardFooter className="flex justify-between p-4 bg-gray-50">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center"
-                >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Message
-                </Button>
+                <DoctorRatings doctor={doctor} />
                 <BookAppointment doctor={doctor} />
             </CardFooter>
         </Card>

@@ -13,5 +13,15 @@ router.post(
 
 router.get("/isDoctor", ClerkExpressRequireAuth({}), doctorService.isDoctor);
 router.get("/doctors", ClerkExpressRequireAuth({}), doctorService.doctors);
+router.post(
+    "/rateDoctor/:doctorId",
+    ClerkExpressRequireAuth({}),
+    doctorService.rateDoctor
+);
+router.get(
+    "/getDoctorRating/:doctorId",
+    ClerkExpressRequireAuth({}),
+    doctorService.getDoctorRatings
+);
 
 export default router;

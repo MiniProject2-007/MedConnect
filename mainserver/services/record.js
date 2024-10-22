@@ -16,7 +16,7 @@ class RecordService {
 
             const record = new Record({
                 ownerId,
-                sharedWith:[],
+                sharedWith: [],
                 name: originalname,
                 description,
                 key,
@@ -35,7 +35,24 @@ class RecordService {
         try {
             const { meetingId } = req.query;
             const records = await Record.find({ meetingId });
-            for(let i = 0; i < records.length; i++) {
+            for (let i = 0; i < records.length; i++) {
+                const record = records[i];
+                const url = await getPresignedUrl(record.key);
+                records[i] = { ...record._doc, url: url.url };
+            }
+            res.status(200).send(records);
+        } catch (e) {
+            console.log(e);
+            res.status(500).send({ message: "Internal Server Error" });
+        }
+    };
+
+    getRecordsMeetingId = async (req, res) => {
+        try {
+            console.log(req.params);
+            const { meetingId } = req.params;
+            const records = await Record.find({ meetingId });
+            for (let i = 0; i < records.length; i++) {
                 const record = records[i];
                 const url = await getPresignedUrl(record.key);
                 records[i] = { ...record._doc, url: url.url };

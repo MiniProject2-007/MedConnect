@@ -188,6 +188,60 @@ class AppointmentService {
             res.status(500).json({ error: "Internal Server Error" });
         }
     };
+
+    getCompletedAppointments = async (req, res) => {
+        try {
+            const { userid } = req.headers;
+            console.log(userid);
+            const appointments = await Appointment.find({
+                $or: [{ userId1: userid }, { userId2: userid }],
+                status: "completed",
+            });
+
+            const appointmentsRes = await Promise.all(
+                appointments.map(async (appointment) => {
+                    const meeting = await meetingService.getAppointmentMeeting(
+                        appointment._id
+                    );
+                    if (appointment.userId1 === userid) {
+                        const user2 = await Doctor.findOne({
+                            userId: appointment.userId2,
+                        });
+
+                        return {
+                            _id: appointment._id,
+                            userId1: appointment.userId1,
+                            userId2: appointment.userId2,
+                            date: appointment.date,
+                            timeSlot: appointment.timeSlot,
+                            status: appointment.status,
+                            with: `${user2.firstName} ${user2.lastName}`,
+                            meeting: meeting?.slug,
+                        };
+                    } else {
+                        const user1 = await userService.getUserInfo(
+                            appointment.userId1
+                        );
+                        return {
+                            _id: appointment._id,
+                            userId1: appointment.userId1,
+                            userId2: appointment.userId2,
+                            date: appointment.date,
+                            timeSlot: appointment.timeSlot,
+                            status: appointment.status,
+                            with: `${user1.firstName} ${user1.lastName}`,
+                            meeting: meeting?.slug,
+                        };
+                    }
+                })
+            );
+
+            res.status(200).json(appointmentsRes);
+        } catch (err) {
+            console.log("Get Completed Appointments Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
 }
 
 export default new AppointmentService();

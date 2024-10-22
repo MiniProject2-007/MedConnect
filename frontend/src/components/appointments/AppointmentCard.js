@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
     Card,
@@ -28,6 +30,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import Feedback from "./Feedback";
 
 const AppointmentCard = ({ appointment, fetchAppointments }) => {
     const { userId, getToken } = useAuth();
@@ -63,6 +66,12 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                     icon: <XCircleIcon className="h-4 w-4" />,
                     text: "Cancelled",
                 };
+            case "completed":
+                return {
+                    color: "bg-blue-500",
+                    icon: <CheckCircleIcon className="h-4 w-4" />,
+                    text: "Completed",
+                };
             default:
                 return {
                     color: "bg-yellow-500",
@@ -78,7 +87,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
             const endpoint =
                 action === "cancel"
                     ? `cancelAppointment/${appointment._id}`
-                 : action === "approve"
+                    : action === "approve"
                     ? `approveAppointment/${appointment._id}`
                     : `rejectAppointment/${appointment._id}`;
             const response = await fetch(
@@ -96,7 +105,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                 toast({
                     title: `Appointment ${
                         action.charAt(0).toUpperCase() + action.slice(1)
-                    }`,
+                    }ed`,
                     description: `Appointment has been ${action}ed successfully.`,
                     variant: "default",
                 });
@@ -107,6 +116,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                 );
             }
         } catch (err) {
+            console.error(`${action} Appointment Error: `, err);
             toast({
                 title: "Error",
                 description: `Failed to ${action} appointment. Please try again.`,
@@ -172,12 +182,14 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                     </div>
                 </div>
             </CardContent>
-            <CardFooter className="pt-4 flex justify-between">
+            <CardFooter className="pt-4 flex flex-wrap justify-between gap-2">
                 {status === "approved" && (
                     <Button
-                        className="w-fit bg-[#FF7F50] text-white hover:bg-[#FF6347] transition-colors duration-300"
+                        className="w-full sm:w-auto bg-[#FF7F50] text-white hover:bg-[#FF6347] transition-colors duration-300"
                         onClick={() => {
-                            router.push(`/meeting/joinmeeting/${appointment.meeting}`);
+                            router.push(
+                                `/meeting/joinmeeting/${appointment.meeting}`
+                            );
                         }}
                     >
                         Join Meeting
@@ -191,7 +203,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                         <DialogTrigger asChild>
                             <Button
                                 variant="outline"
-                                className="w-fit border-[#FF7F50] text-[#FF7F50] hover:bg-[#FF7F50] hover:text-white transition-colors duration-300"
+                                className="w-full sm:w-auto border-[#FF7F50] text-[#FF7F50] hover:bg-[#FF7F50] hover:text-white transition-colors duration-300"
                             >
                                 Cancel
                             </Button>
@@ -219,7 +231,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                                     type="button"
                                     variant="outline"
                                     onClick={() => setIsCancelDialogOpen(false)}
-                                    className="w-full sm:w-auto"
+                                    className="w-full sm:w-auto mt-2 sm:mt-0 sm:ml-2"
                                 >
                                     No, Keep Appointment
                                 </Button>
@@ -234,7 +246,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                             onOpenChange={setIsApproveDialogOpen}
                         >
                             <DialogTrigger asChild>
-                                <Button className="w-fit bg-[#FF7F50] text-white hover:bg-[#FF6347] transition-colors duration-300">
+                                <Button className="w-full sm:w-auto bg-[#FF7F50] text-white hover:bg-[#FF6347] transition-colors duration-300">
                                     Approve
                                 </Button>
                             </DialogTrigger>
@@ -254,7 +266,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                                         onClick={() =>
                                             handleAppointmentAction("approve")
                                         }
-                                        className="w-full sm:w-auto bg-green-600"
+                                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
                                     >
                                         Yes, Approve Appointment
                                     </Button>
@@ -264,7 +276,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                                         onClick={() =>
                                             setIsApproveDialogOpen(false)
                                         }
-                                        className="w-full sm:w-auto"
+                                        className="w-full sm:w-auto mt-2 sm:mt-0 sm:ml-2"
                                     >
                                         No, Keep Pending
                                     </Button>
@@ -277,7 +289,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                             onOpenChange={setIsRejectDialogOpen}
                         >
                             <DialogTrigger asChild>
-                                <Button className="w-fit bg-red-500 text-white hover:bg-red-600 transition-colors duration-300">
+                                <Button className="w-full sm:w-auto bg-red-500 text-white hover:bg-red-600 transition-colors duration-300">
                                     Reject
                                 </Button>
                             </DialogTrigger>
@@ -307,7 +319,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                                         onClick={() =>
                                             setIsRejectDialogOpen(false)
                                         }
-                                        className="w-full sm:w-auto"
+                                        className="w-full sm:w-auto mt-2 sm:mt-0 sm:ml-2"
                                     >
                                         No, Keep Pending
                                     </Button>
@@ -315,6 +327,9 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                             </DialogContent>
                         </Dialog>
                     </>
+                )}
+                {status === "completed" && (
+                    <Feedback appointment={appointment} />
                 )}
             </CardFooter>
         </Card>

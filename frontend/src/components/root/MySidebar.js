@@ -24,9 +24,9 @@ const sidebarItems = [
     { name: "Home", href: "/home", icon: Home },
     // { name: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
     { name: "Appointments", href: "/appointments", icon: Calendar },
-    { name: "Messages", href: "/messages", icon: MessageSquare },
+    // { name: "Messages", href: "/messages", icon: MessageSquare },
     { name: "Records", href: "/records", icon: FileText },
-    { name: "Settings", href: "/settings", icon: Settings },
+    // { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function MySidebar() {
@@ -55,7 +55,7 @@ export default function MySidebar() {
                     isOpen ? "w-64" : "w-28"
                 )}
             >
-                <div className="flex items-center justify-center mb-28">
+                <div className="flex items-center justify-center mb-40">
                     <UserButton />
                 </div>
                 <ScrollArea className="flex-grow mt-8">
@@ -132,7 +132,7 @@ export default function MySidebar() {
                         }}
                     />
                 </div>
-                <div className="flex items-center justify-center mb-16 mt-6">
+                <div className="flex items-center justify-center mb-40 mt-6">
                     <UserButton />
                 </div>
                 <ScrollArea className="flex-grow mt-8">

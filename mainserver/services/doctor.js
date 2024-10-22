@@ -2,6 +2,7 @@ import { validationResult } from "express-validator";
 import Doctor from "../Models/Doctor.js";
 import { format } from "date-fns";
 import Appointment from "../Models/Appointment.js";
+import Rating from "../Models/Rating.js";
 
 class DoctorService {
     doctorSignin = async (req, res) => {
@@ -62,6 +63,8 @@ class DoctorService {
                 doctors.map(async (doctor) => {
                     const availableDates =
                         await this.getAvailableDatesAndTimeSlots(doctor.userId);
+
+                    const ratings = await this.getDoctorRatings(doctor.userId);
                     return {
                         _id: doctor._id,
                         firstName: doctor.firstName,
@@ -71,6 +74,7 @@ class DoctorService {
                         specialization: doctor.specialization,
                         userId: doctor.userId,
                         availableDates,
+                        ratings,
                     };
                 })
             );
@@ -135,6 +139,57 @@ class DoctorService {
             return availableDates;
         } catch (err) {
             console.log("Get Available Dates and Time Slots Error: ", err);
+            return [];
+        }
+    };
+
+    rateDoctor = async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+
+            const { doctorId } = req.params;
+            const { rating, review,username } = req.body;
+            const { userid } = req.headers;
+
+            const doctor = await Doctor.findOne({ userId: doctorId });
+            if (!doctor) {
+                return res.status(404).json({ error: "Doctor not found" });
+            }
+
+            const newRating = await Rating.create({
+                doctorId,
+                userId: userid,
+                rating,
+                review,
+                username,
+            });
+            const ratings = await Rating.find({ doctorId });
+            let totalRating = 0;
+            ratings.forEach((rating) => {
+                totalRating += rating.rating;
+            });
+
+            doctor.rating = totalRating / ratings.length;
+            await doctor.save();
+
+            res.status(201).json(newRating);
+        } catch (err) {
+            console.log("Rate Doctor Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
+
+    getDoctorRatings = async (doctorId) => {
+        try {
+            console.log("Doctor ID: ", doctorId);   
+            const ratings = await Rating.find({ doctorId });
+            console.log("Ratings: ", ratings);
+            return ratings;
+        } catch (err) {
+            console.log("Get Doctor Ratings Error: ", err);
             return [];
         }
     };
