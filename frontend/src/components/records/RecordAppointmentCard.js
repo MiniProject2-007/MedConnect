@@ -18,7 +18,7 @@ export const RecordAppointmentCard = ({ appointment }) => (
     <Card className="flex flex-col">
         <CardHeader>
             <CardTitle className="text-lg font-semibold text-[#FF7F50]">
-                Appointment with Dr. {appointment.doctorName}
+                Appointment {appointment.meeting}
             </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

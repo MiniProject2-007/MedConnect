@@ -85,7 +85,7 @@ const FeaturesInAction = () => {
 
                     {/* Real-time Consultation Image */}
                     <motion.img
-                        src="https://via.placeholder.com/600x400.png?text=Demo+Consultation"
+                        src="/meeting.webp"
                         alt="Real-time Consultation"
                         className="rounded-lg shadow-lg"
                         variants={imageVariants}
@@ -94,7 +94,7 @@ const FeaturesInAction = () => {
 
                     {/* Collaborative Whiteboards Image */}
                     <motion.img
-                        src="https://via.placeholder.com/600x400.png?text=Demo+Whiteboard"
+                        src="/board.webp"
                         alt="Collaborative Whiteboards"
                         className="rounded-lg shadow-lg"
                         variants={imageVariants}

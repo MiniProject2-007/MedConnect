@@ -202,12 +202,12 @@ export default function LandingPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <TestimonialCard
                                 quote="This platform has revolutionized how I collaborate with colleagues and interact with patients. The video consultations and file sharing features are game-changers."
-                                name="Dr. Sarah Johnson"
+                                name="Dr. Satej Sawant"
                                 title="Cardiologist"
                             />
                             <TestimonialCard
                                 quote="I love how easy it is to connect with my doctors and access my medical information. The platform is user-friendly and has greatly improved my healthcare experience."
-                                name="Michael Thompson"
+                                name="Shreyas Kamble"
                                 title="Patient"
                             />
                         </div>
