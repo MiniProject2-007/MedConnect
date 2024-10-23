@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-const Whiteboard = () => {
+const Whiteboard = ({ id }) => {
     const socket = useSocket();
     const [elements, setElements] = useState([]);
     const [tool, setTool] = useState("pen");
@@ -34,13 +34,24 @@ const Whiteboard = () => {
                 setElements(newElements);
             });
 
+            socket.on("loadWhiteboard", (boardData) => {
+                setElements(JSON.parse(boardData));
+            });
+
             return () => {
                 socket.off("whiteboardUpdate");
             };
         }
     }, [socket]);
 
-    // Adding a new shape (Rectangle/Circle)
+    const loadBoard = () => {
+        socket.emit("loadWhiteboard", id);
+    };
+
+    useEffect(() => {
+        loadBoard();
+    }, []);
+
     const addShape = (type) => {
         const shape = {
             type,
@@ -81,6 +92,7 @@ const Whiteboard = () => {
         }
         return false;
     };
+
     const handleMouseDown = (e) => {
         const pos = stageRef.current.getPointerPosition();
         if (tool === "pen" || tool === "eraser") {
@@ -115,7 +127,6 @@ const Whiteboard = () => {
         }
     };
 
-    // Handling drawing continuation (for lines)
     const handleMouseMove = () => {
         if (!isDrawing) return;
         const pos = stageRef.current.getPointerPosition();
@@ -135,7 +146,6 @@ const Whiteboard = () => {
         setIsDrawing(false);
     };
 
-    // Handle double click on text for editing
     const handleTextDblClick = (id) => {
         const textNode = stageRef.current.findOne(`#${id}`);
         const textPosition = textNode.getAbsolutePosition();
@@ -167,7 +177,10 @@ const Whiteboard = () => {
 
     const saveBoard = () => {
         const boardData = JSON.stringify(elements);
-        socket.emit("saveWhiteboard", boardData);
+        socket.emit("saveWhiteboard", {
+            slug: id,
+            data: boardData,
+        });
         toast({
             title: "Whiteboard Saved",
             description: "Your whiteboard has been saved successfully.",
@@ -191,7 +204,7 @@ const Whiteboard = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gray-50">
+        <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
             <div className="flex flex-wrap justify-center gap-2 p-4 bg-white shadow-md">
                 <Button
                     onClick={() => setTool("pen")}
@@ -282,43 +295,78 @@ const Whiteboard = () => {
                 </div>
             </div>
 
-            <div className="flex-grow overflow-hidden">
-                <Stage
-                    width={window.innerWidth}
-                    height={window.innerHeight - 100}
-                    ref={stageRef}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    className="bg-white"
-                >
-                    <Layer>
-                        {elements.map((element, i) => {
-                            if (element.type === "rect") {
-                                return <Rect key={i} {...element} />;
-                            } else if (element.type === "circle") {
-                                return <Circle key={i} {...element} />;
-                            } else if (element.type === "line") {
-                                return <Line key={i} {...element} />;
-                            } else if (element.type === "text") {
+            <Stage
+                ref={stageRef}
+                width={window.innerWidth}
+                height={window.innerHeight - 150}
+                onMouseDown={handleMouseDown}
+                onMousemove={handleMouseMove}
+                onMouseup={handleMouseUp}
+            >
+                <Layer>
+                    {elements.map((el, i) => {
+                        switch (el.type) {
+                            case "line":
+                                return (
+                                    <Line
+                                        key={i}
+                                        points={el.points}
+                                        stroke={el.stroke}
+                                        strokeWidth={el.strokeWidth}
+                                        draggable={el.draggable}
+                                    />
+                                );
+                            case "text":
                                 return (
                                     <Text
                                         key={i}
-                                        id={element.id}
-                                        {...element}
+                                        id={el.id}
+                                        x={el.x}
+                                        y={el.y}
+                                        text={el.text}
+                                        fontSize={el.fontSize}
+                                        fill={el.fill}
+                                        draggable={el.draggable}
                                         onDblClick={() =>
-                                            handleTextDblClick(element.id)
+                                            handleTextDblClick(el.id)
                                         }
                                     />
                                 );
-                            }
-                            return null; // In case the element type is not recognized
-                        })}
-                    </Layer>
-                </Stage>
-            </div>
+                            case "rect":
+                                return (
+                                    <Rect
+                                        key={i}
+                                        x={el.x}
+                                        y={el.y}
+                                        width={el.width}
+                                        height={el.height}
+                                        fill={el.fill}
+                                        draggable={el.draggable}
+                                    />
+                                );
+                            case "circle":
+                                return (
+                                    <Circle
+                                        key={i}
+                                        x={el.x}
+                                        y={el.y}
+                                        radius={50}
+                                        fill={el.fill}
+                                        draggable={el.draggable}
+                                    />
+                                );
+                            default:
+                                return null;
+                        }
+                    })}
+                </Layer>
+            </Stage>
         </div>
     );
 };
 
 export default Whiteboard;
+
+{
+    /*  */
+}

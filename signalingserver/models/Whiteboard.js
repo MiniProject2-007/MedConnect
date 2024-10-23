@@ -15,6 +15,10 @@ const whiteBoardSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        lastModified:{
+            type: Date,
+            default: Date.now
+        }
     },
     {
         timestamps: true,

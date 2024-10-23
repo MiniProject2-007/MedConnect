@@ -54,7 +54,9 @@ export const RecordAppointmentDetails = ({ appointment }) => {
             <ScrollArea className="mt-6 h-[300px] w-full rounded-md border p-4 shadow-lg bg-white">
                 <h3 className="font-semibold text-lg mb-4">
                     Doctor:{" "}
-                    <span className="text-gray-800">{appointment.doctorName}</span>
+                    <span className="text-gray-800">
+                        {appointment.doctorName}
+                    </span>
                 </h3>
                 <div className="mb-4">
                     <p className="flex items-center text-sm text-gray-600 mb-2">
@@ -66,7 +68,7 @@ export const RecordAppointmentDetails = ({ appointment }) => {
                         Time: {getSlotString(appointment.timeSlot)}
                     </p>
                 </div>
-                
+
                 <h4 className="font-semibold text-base mb-3">Records:</h4>
                 {records.length > 0 ? (
                     records.map((record, index) => (
@@ -88,25 +90,23 @@ export const RecordAppointmentDetails = ({ appointment }) => {
                         </div>
                     ))
                 ) : (
-                    <p className="text-sm text-gray-600">No records available</p>
+                    <p className="text-sm text-gray-600">
+                        No records available
+                    </p>
                 )}
 
-                {appointment.meetingLink && (
-                    <div className="mt-6">
-                        <h4 className="font-semibold text-base mb-2">Meeting Recording:</h4>
-                        <div className="flex items-center">
-                            <LinkIcon className="inline-block mr-2 h-5 w-5 text-gray-500" />
-                            <a
-                                href={appointment.meetingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:underline text-sm"
-                            >
-                                View Recording
-                            </a>
-                        </div>
-                    </div>
-                )}
+                <h4 className="font-semibold text-base mt-6 mb-3">
+                    Collaborative WhiteBoard Link:{" "}<span>
+                        <a
+                            href={`/meeting/whiteboard/${appointment.meeting}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline text-sm"
+                        >
+                            View
+                        </a>
+                    </span>
+                </h4>
             </ScrollArea>
         </DialogContent>
     );

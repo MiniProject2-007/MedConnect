@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const WhiteBoard = require("./models/Whiteboard");
+const connect = require("./db");
 
 const app = express();
 const server = http.createServer(app);
@@ -52,40 +53,64 @@ io.on("connection", (socket) => {
         socket.broadcast.emit("whiteboardUpdate", data);
     });
 
-    socket.on("saveWhiteboard", async (boardData) => {
-        const newWhiteboard = new WhiteBoard({
-            slug: socket.id,
-            appointmentId: socket.id,
-            data: boardData,
-        });
-        await newWhiteboard.save();
-        console.log("Whiteboard saved");
+    socket.on("saveWhiteboard", async (data) => {
+        try {
+            let whiteboard = await WhiteBoard.findOne({ slug: data.slug });
+            if (whiteboard) {
+                whiteboard.data = data.data;
+                await whiteboard.save();
+                console.log("Whiteboard updated successfully");
+            } else {
+                const newWhiteboard = new WhiteBoard({
+                    slug: data.slug,
+                    appointmentId: data.slug,
+                    data: data.data,
+                });
+                await newWhiteboard.save();
+                console.log("New Whiteboard saved successfully");
+            }
+        } catch (err) {
+            console.log("Error saving whiteboard", err);
+        }
+    });
+
+    socket.on("loadWhiteboard", async (slug) => {
+        try {
+            const whiteboard = await WhiteBoard.findOne({ slug });
+            if (whiteboard) {
+                socket.emit("loadWhiteboard", whiteboard.data);
+            }
+        } catch (err) {
+            console.log("Error loading whiteboard", err);
+        }
     });
 
     socket.on("chat:joined", (data) => {
         const { room } = data;
-        console.log("chat:joined", room);
         socket.join(room);
         io.to(room).emit("chat:joined", data);
     });
 
     socket.on("chat:message", (data) => {
         const { room, message } = data;
-        console.log("chat:message", room);
         io.to(room).emit("chat:message", message);
     });
 
     socket.on("file:upload", (data) => {
         const { room, file } = data;
-        console.log("file:upload", room);
         io.to(room).emit("file:upload", file);
     });
-    
+
+    socket.on("disconnect", () => {
+        console.log("Socket Disconnected", socket.id);
+    });
+
     socket.on("disconnect", () => {
         console.log("Socket Disconnected", socket.id);
     });
 });
 
-server.listen(8000, () => {
+server.listen(8000, async () => {
+    await connect();
     console.log("listening on *:8000");
 });
