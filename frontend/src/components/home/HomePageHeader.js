@@ -42,12 +42,8 @@ const HomePageHeader = () => {
         }
     };
     useEffect(() => {
-        if (localStorage.getItem("isDoctor") !== undefined) {
-            setIsDoctor(localStorage.getItem("isDoctor") === "true");
-        } else {
-            setIsDoctor(getIsDoctor());
-        }
-    });
+        setIsDoctor(getIsDoctor())
+    },[]);
     return (
         <header className="px-8 py-4">
             <div className="mx-auto flex items-center justify-between">
