@@ -27,10 +27,11 @@ const Feedback = ({ appointment }) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        const doctorId = (appointment.userId1 === userId) ? appointment.userId2 : appointment.userId1;
         try {
             const token = await getToken();
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/rateDoctor/${appointment.userId1}`,
+                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/rateDoctor/${doctorId}`,
                 {
                     method: "POST",
                     headers: {
