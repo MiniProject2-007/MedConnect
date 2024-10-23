@@ -41,9 +41,7 @@ const HomePageHeader = () => {
             return false;
         }
     };
-    useEffect(async () => {
-        setIsDoctor(await getIsDoctor())
-    },[]);
+    
     return (
         <header className="px-8 py-4">
             <div className="mx-auto flex items-center justify-between">
