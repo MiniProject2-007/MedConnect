@@ -15,7 +15,7 @@ import { useAuth } from "@clerk/nextjs";
 const HomePageHeader = () => {
     const { getToken, userId } = useAuth();
     const router = useRouter();
-    const [isDoctor, setIsDoctor] = useState(true);
+    const [isDoctor, setIsDoctor] = useState(false);
     const getIsDoctor = async () => {
         const token = await getToken();
         try {
