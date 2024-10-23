@@ -19,7 +19,7 @@ const HomePageHeader = () => {
     const getIsDoctor = async () => {
         const token = await getToken();
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_MAIN_SERVER}/user/isDoctor`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/isDoctor`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
