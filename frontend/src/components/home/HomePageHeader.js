@@ -41,8 +41,8 @@ const HomePageHeader = () => {
             return false;
         }
     };
-    useEffect(() => {
-        setIsDoctor(getIsDoctor())
+    useEffect(async () => {
+        setIsDoctor(await getIsDoctor())
     },[]);
     return (
         <header className="px-8 py-4">
