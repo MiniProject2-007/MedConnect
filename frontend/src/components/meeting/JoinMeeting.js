@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Video, Mic, MicOff, VideoOff, Phone } from "lucide-react";
 import { useSocket } from "../HOC/SocketProvider";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 const JoinMeeting = ({ slug }) => {
     const [isMicOn, setIsMicOn] = useState(true);
     const [isVideoOn, setIsVideoOn] = useState(true);
     const [localStream, setLocalStream] = useState(null);
     const [email, setEmail] = useState("");
+    const { user } = useUser();
     const socket = useSocket();
     const router = useRouter();
 
@@ -53,6 +55,11 @@ const JoinMeeting = ({ slug }) => {
         socket.emit("room:join", { slug, email });
     };
 
+    useEffect(() => {
+        if (user) {
+            setEmail(user.email);
+        }
+    }, [user]);
     useEffect(() => {
         startCamera();
         socket.on("room:join", (data) => {
@@ -118,15 +125,6 @@ const JoinMeeting = ({ slug }) => {
                                     <VideoOff className="h-6 w-6 text-red-500" />
                                 )}
                             </Button>
-                        </div>
-                        <div>
-                            <Input
-                                type="email"
-                                placeholder="Enter your email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                name="email"
-                            />
                         </div>
                         <div className="flex items-center justify-center space-x-4 mb-4">
                             <Button
