@@ -367,6 +367,46 @@ const Whiteboard = ({ id }) => {
 
 export default Whiteboard;
 
-{
-    /*  */
-}
+// {
+//     /*  */
+// }
+// "use client";
+// import React from "react";
+// import { Tldraw, TLAssetStore, uniqueId } from "tldraw";
+// import "tldraw/tldraw.css";
+
+// const UPLOAD_URL = `${process.env.NEXT_PUBLIC_MAIN_SERVER}/whiteboard/uploadImage`;
+
+// const myAssetStore = {
+//     async upload(asset, file) {
+//         const formData = new FormData();
+//         formData.append("image", file);
+
+//         const uniqueid = uniqueId();
+//         const key = `${uniqueid}/${file.name}`;
+//         formData.append("key", key);
+
+//         const res = await fetch(UPLOAD_URL, {
+//             method: "POST",
+//             body: formData,
+//         });
+
+//         const data = await res.json();
+//         console.log(data);
+//         return data.url;
+//     },
+
+//     resolve(asset) {
+//         return asset.props.src;
+//     },
+// };
+
+// const Whiteboard = () => {
+//     return (
+//         <div style={{ position: "fixed", inset: 0 }}>
+//             <Tldraw assets={myAssetStore} />
+//         </div>
+//     );
+// };
+
+// export default Whiteboard;

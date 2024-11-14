@@ -41,6 +41,7 @@
     "socket.io-client": "^4.8.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "tldraw": "^3.4.0",
     "vaul": "^1.0.0"
   },
   "devDependencies": {
