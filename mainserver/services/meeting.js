@@ -13,10 +13,10 @@ class MeetingService {
                 duration: 60,
                 slug,
             });
-            return true;
+            return { success: true, slug };
         } catch (err) {
             console.log("Create Meeting Error: ", err);
-            return false;
+            return { success: false, slug: null };
         }
     };
 
@@ -31,7 +31,6 @@ class MeetingService {
             return null;
         }
     };
-
 }
 
 export default new MeetingService();

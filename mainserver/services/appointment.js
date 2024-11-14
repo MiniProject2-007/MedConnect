@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import Doctor from "../Models/Doctor.js";
 import meetingService from "./meeting.js";
 import userService from "./user.js";
+import { sendAppointmentMessage } from "../lib/email.js";
 
 class AppointmentService {
     createAppointment = async (req, res) => {
@@ -160,8 +161,19 @@ class AppointmentService {
                 return res.status(404).json({ error: "Appointment not found" });
             }
             await Appointment.findByIdAndUpdate(id, { status: "approved" });
+            const meeting = await meetingService.createMeeting(appointment);
+            const link = `${process.env.FRONTEND_URL}/meeting/joinmeeting/${meeting.slug}`;
 
-            await meetingService.createMeeting(appointment);
+            const userids = [appointment.userId1, appointment.userId2];
+
+            userids.map(async (userid) => {
+                try {
+                    const email = await userService.getUserEmail(userid);
+                    await sendAppointmentMessage(email, link);
+                } catch (err) {
+                    console.log("Email Error: ", err);
+                }
+            });
             res.status(200).json({ message: "Appointment approved" });
         } catch (err) {
             console.log("Approve Appointment Error: ", err);
