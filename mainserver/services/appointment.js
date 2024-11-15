@@ -88,6 +88,18 @@ class AppointmentService {
                     const meeting = await meetingService.getAppointmentMeeting(
                         appointment._id
                     );
+
+                    if (
+                        await this.isAppointmentPassed(
+                            appointment.date,
+                            appointment.timeSlot
+                        )
+                    ) {
+                        await Appointment.findByIdAndUpdate(appointment._id, {
+                            status: "completed",
+                        });
+                        appointment.status = "completed";
+                    }
                     if (appointment.userId1 === userid) {
                         const user2 = await Doctor.findOne({
                             userId: appointment.userId2,
@@ -252,6 +264,19 @@ class AppointmentService {
         } catch (err) {
             console.log("Get Completed Appointments Error: ", err);
             res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
+
+    isAppointmentPassed = async (date, timeSlot) => {
+        try {
+            const currentTime = new Date();
+            const appointmentTime = new Date(
+                `${date}T${timeSlot}:00`
+            );
+            return currentTime > appointmentTime;
+        } catch (err) {
+            console.log("Is Appointment Passed Error: ", err);
+            return false;
         }
     };
 }
