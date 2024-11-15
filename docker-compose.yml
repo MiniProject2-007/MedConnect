@@ -29,4 +29,17 @@ services:
       - /app/node_modules
     command: ["nodemon", "app.js"]
 
+  whiteboardserver:
+    container_name: whiteboardserver
+    build:
+      context: ./whiteboardserver
+      dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+    env_file:
+      - .env
+    volumes:
+      - ./whiteboardserver:/app
+      - /app/node_modules
+    command: ["nodemon", "app.js"]
   
