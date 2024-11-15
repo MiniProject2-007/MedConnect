@@ -9,8 +9,8 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
 const JoinMeeting = ({ slug }) => {
-    const [isMicOn, setIsMicOn] = useState(true);
-    const [isVideoOn, setIsVideoOn] = useState(true);
+    const [isMicOn, setIsMicOn] = useState(false);
+    const [isVideoOn, setIsVideoOn] = useState(false);
     const [localStream, setLocalStream] = useState(null);
     const [email, setEmail] = useState("");
     const { user } = useUser();
@@ -61,7 +61,6 @@ const JoinMeeting = ({ slug }) => {
         }
     }, [user]);
     useEffect(() => {
-        startCamera();
         socket.on("room:join", (data) => {
             const { email, room } = data;
             router.push(`/meeting/live/${slug}`);

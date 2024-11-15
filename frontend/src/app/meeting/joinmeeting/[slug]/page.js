@@ -1,6 +1,7 @@
 import JoinMeeting from "@/components/meeting/JoinMeeting";
 import React from "react";
 
+
 const JoinMeetingPage = ({ params }) => {
     const { slug } = params;
     return (

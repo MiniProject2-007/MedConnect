@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,9 +31,15 @@ const sidebarItems = [
 
 export default function MySidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const { userId } = useAuth();
 
+    useEffect(() => {
+        if (!userId) {
+            router.push("/");
+        }
+    }, []);
     if (
         pathname === "/" ||
         pathname.includes("/meeting/live/") ||
