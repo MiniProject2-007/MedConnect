@@ -1,11 +1,11 @@
-import Whiteboard from "@/components/meeting/Whiteboard";
+import Whiteboard2 from "@/components/meeting/Whiteboard2";
 import React from "react";
 
 const WhiteboardPage = ({ params }) => {
     const { id } = params;
     return (
         <div className="p-4">
-            <Whiteboard id={id} />
+            <Whiteboard2 id={id} />
         </div>
     );
 };
