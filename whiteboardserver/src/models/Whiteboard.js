@@ -1,24 +1,20 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const whiteBoardSchema = new mongoose.Schema(
     {
-        slug: {
+        id: {
             type: String,
             required: true,
             unique: true,
         },
-        appointmentId: {
-            type: String,
-            required: true,
-        },
         data: {
             type: String,
-            required: true,
+            required: true, 
         },
-        lastModified:{
+        lastModified: {
             type: Date,
-            default: Date.now
-        }
+            default: Date.now, 
+        },
     },
     {
         timestamps: true,
@@ -27,4 +23,4 @@ const whiteBoardSchema = new mongoose.Schema(
 
 const WhiteBoard = mongoose.model("WhiteBoard", whiteBoardSchema);
 
-module.exports = WhiteBoard;
+export default WhiteBoard;

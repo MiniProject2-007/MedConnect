@@ -5,7 +5,7 @@ const WhiteboardPage = ({ params }) => {
     const { id } = params;
     return (
         <div className="p-4">
-            <Whiteboard2 id={id} />
+            <Whiteboard2 roomId={id} />
         </div>
     );
 };

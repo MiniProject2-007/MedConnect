@@ -1,8 +1,6 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const WhiteBoard = require("./models/Whiteboard");
-const connect = require("./db");
 
 const app = express();
 const server = http.createServer(app);
@@ -48,42 +46,7 @@ io.on("connection", (socket) => {
         console.log("peer:nego:done", ans);
         io.to(to).emit("peer:nego:final", { from: socket.id, ans });
     });
-    socket.on("whiteboardUpdate", (data) => {
-        console.log("whiteboardUpdate", data);
-        socket.broadcast.emit("whiteboardUpdate", data);
-    });
-
-    socket.on("saveWhiteboard", async (data) => {
-        try {
-            let whiteboard = await WhiteBoard.findOne({ slug: data.slug });
-            if (whiteboard) {
-                whiteboard.data = data.data;
-                await whiteboard.save();
-                console.log("Whiteboard updated successfully");
-            } else {
-                const newWhiteboard = new WhiteBoard({
-                    slug: data.slug,
-                    appointmentId: data.slug,
-                    data: data.data,
-                });
-                await newWhiteboard.save();
-                console.log("New Whiteboard saved successfully");
-            }
-        } catch (err) {
-            console.log("Error saving whiteboard", err);
-        }
-    });
-
-    socket.on("loadWhiteboard", async (slug) => {
-        try {
-            const whiteboard = await WhiteBoard.findOne({ slug });
-            if (whiteboard) {
-                socket.emit("loadWhiteboard", whiteboard.data);
-            }
-        } catch (err) {
-            console.log("Error loading whiteboard", err);
-        }
-    });
+ 
 
     socket.on("chat:joined", (data) => {
         const { room } = data;
@@ -111,6 +74,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(8000, async () => {
-    await connect();
     console.log("listening on *:8000");
 });
