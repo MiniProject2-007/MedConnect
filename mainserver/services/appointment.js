@@ -219,7 +219,14 @@ class AppointmentService {
             console.log(userid);
             const appointments = await Appointment.find({
                 $or: [{ userId1: userid }, { userId2: userid }],
-                status: "completed",
+                $or: [
+                    {
+                        status: "completed",
+                    },
+                    {
+                        status: "approved",
+                    },
+                ],
             });
 
             const appointmentsRes = await Promise.all(
@@ -270,9 +277,7 @@ class AppointmentService {
     isAppointmentPassed = async (date, timeSlot) => {
         try {
             const currentTime = new Date();
-            const appointmentTime = new Date(
-                `${date}T${timeSlot}:00`
-            );
+            const appointmentTime = new Date(`${date}T${timeSlot}:00`);
             return currentTime > appointmentTime;
         } catch (err) {
             console.log("Is Appointment Passed Error: ", err);
