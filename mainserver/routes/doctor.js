@@ -12,7 +12,7 @@ router.post(
 );
 
 router.get("/isDoctor", ClerkExpressRequireAuth({}), doctorService.isDoctor);
-router.get("/doctors", ClerkExpressRequireAuth({}), doctorService.doctors);
+router.get("/doctors/:query", ClerkExpressRequireAuth({}), doctorService.doctors);
 router.post(
     "/rateDoctor/:doctorId",
     ClerkExpressRequireAuth({}),

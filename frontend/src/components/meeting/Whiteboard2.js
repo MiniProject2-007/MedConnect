@@ -1,17 +1,11 @@
 "use client";
 import { useSync } from "@tldraw/sync";
-import {
-    AssetRecordType,
-    getHashForString,
-    Tldraw,
-    uniqueId,
-} from "tldraw";
+import { AssetRecordType, getHashForString, Tldraw, uniqueId } from "tldraw";
 import "tldraw/tldraw.css";
 
 const WORKER_URL = process.env.NEXT_PUBLIC_WHITEBOARD_URL;
 
-
-function Whiteboard2({roomId}) {
+function Whiteboard2({ roomId }) {
     const store = useSync({
         uri: `${WORKER_URL}/connect/${roomId}`,
         assets: myAssetStore,
@@ -19,6 +13,7 @@ function Whiteboard2({roomId}) {
 
     return (
         <div style={{ position: "fixed", inset: 0 }}>
+            <div className="w-32 h-24 bg-[#f9fafb] absolute bottom-1 right-1 z-[1000]"></div>
             <Tldraw
                 store={store}
                 onMount={(editor) => {

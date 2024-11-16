@@ -11,37 +11,50 @@ import {
 import { Bell, Search, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { useDebounce } from "@/hooks/useDebounce";
 
-const HomePageHeader = () => {
+const HomePageHeader = ({query}) => {
     const { getToken, userId } = useAuth();
     const router = useRouter();
     const [isDoctor, setIsDoctor] = useState(false);
+    const [searchQuery, setSearchQuery] = useState(query);
+    const debouncedQuery = useDebounce(searchQuery, 300);
+
+    useEffect(() => {
+        router.push(`?query=${debouncedQuery}`);
+    }, [debouncedQuery]);
+
     const getIsDoctor = async () => {
         const token = await getToken();
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/isDoctor`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                    userid: userId,
-                },
-            });
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/isDoctor`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                        userid: userId,
+                    },
+                }
+            );
 
             const data = await res.json();
             if (data.isDoctor) {
                 localStorage.setItem("isDoctor", "true");
-                return true;
+                setIsDoctor(true);
             } else {
                 localStorage.setItem("isDoctor", "false");
-                return false;
+                setIsDoctor(false);
             }
         } catch (err) {
             console.log(err);
             return false;
         }
     };
-    
+    useEffect(() => {
+        getIsDoctor();
+    }, []);
     return (
         <header className="px-8 py-4">
             <div className="mx-auto flex items-center justify-between">
@@ -51,6 +64,7 @@ const HomePageHeader = () => {
                         type="text"
                         placeholder="Search for doctors, specialties, or conditions"
                         className="pl-10 pr-4 py-3 w-full border-[#FF7F50] focus:ring-[#FF7F50]"
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
 
@@ -66,27 +80,6 @@ const HomePageHeader = () => {
                             Sign In as Doctor
                         </Button>
                     )}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Bell
-                                    className="h-5 w-5 -mr-10 md:mr-0"
-                                    color="#FF7F50"
-                                />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                                New message from Dr. Smith
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                Appointment reminder: Tomorrow at 10 AM
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                Your test results are ready
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
             </div>
         </header>

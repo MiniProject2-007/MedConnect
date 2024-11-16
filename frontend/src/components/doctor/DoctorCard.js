@@ -11,8 +11,8 @@ const DoctorCard = ({ doctor }) => {
             className="overflow-hidden transition-all duration-300 hover:shadow-lg"
         >
             <CardContent className="p-0">
-                <div className="h-48 bg-gradient-to-br from-[#FF7F50] to-[#FF6347] flex items-center justify-center">
-                    <User className="w-24 h-24 text-white" />
+                <div className="h-48 flex items-center justify-center border-b">
+                    <User className="w-32 h-32 text-gray-400" />
                 </div>
                 <div className="p-4">
                     <h3 className="font-bold text-lg text-gray-800 mb-1">{`${doctor.firstName} ${doctor.lastName}`}</h3>

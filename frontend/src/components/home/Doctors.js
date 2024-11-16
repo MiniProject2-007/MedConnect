@@ -8,17 +8,20 @@ import { User, MessageSquare, Calendar } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import DoctorCard from "../doctor/DoctorCard";
 
-export default function Doctors() {
+export default function Doctors({query}) {
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { getToken ,userId} = useAuth();
 
     const fetchDoctors = async () => {
+        if(!query || query===""){
+            query = "all";
+        }
         const token = await getToken();
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/doctors`,
+                `${process.env.NEXT_PUBLIC_MAIN_SERVER}/doctor/doctors/${query}`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -41,7 +44,7 @@ export default function Doctors() {
 
     useEffect(() => {
         fetchDoctors();
-    }, []);
+    }, [query]);
 
     if (loading) {
         return (
@@ -70,7 +73,7 @@ export default function Doctors() {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+        <div id="doctors" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
             {doctors.map((doctor) => (
                 <DoctorCard key={doctor._id} doctor={doctor} />
             ))}

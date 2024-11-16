@@ -54,9 +54,24 @@ class DoctorService {
     doctors = async (req, res) => {
         try {
             const { userid } = req.headers;
-            const doctors = await Doctor.find({
-                userId: { $ne: userid },
-            });
+            const query = req.params.query;
+
+            let doctors = [];
+
+            if(query === undefined || query === null || query === "" || query === "all"){
+                doctors = await Doctor.find({
+                    userId: { $ne: userid },
+                });
+            }else{
+                doctors = await Doctor.find({
+                    userId: { $ne: userid },
+                    $or:[
+                        {firstName: { $regex: query, $options: "i" }},
+                        {lastName: { $regex: query, $options: "i" }},
+                        {specialization: { $regex: query, $options: "i" }},
+                    ]
+                });
+            }
 
             // Await each doctor and fetch available dates
             const doctorsRes = await Promise.all(
