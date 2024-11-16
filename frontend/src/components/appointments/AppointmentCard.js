@@ -195,7 +195,7 @@ const AppointmentCard = ({ appointment, fetchAppointments }) => {
                         Join Meeting
                     </Button>
                 )}
-                {status !== "cancelled" && appointment.userId2 !== userId && (
+                {status !== "cancelled" && status!=="completed" && appointment.userId2 !== userId && (
                     <Dialog
                         open={isCancelDialogOpen}
                         onOpenChange={setIsCancelDialogOpen}
