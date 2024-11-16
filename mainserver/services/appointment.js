@@ -218,14 +218,9 @@ class AppointmentService {
             const { userid } = req.headers;
             console.log(userid);
             const appointments = await Appointment.find({
-                $or: [{ userId1: userid }, { userId2: userid }],
-                $or: [
-                    {
-                        status: "completed",
-                    },
-                    {
-                        status: "approved",
-                    },
+                $and: [
+                    { $or: [{ userId1: userid }, { userId2: userid }] },
+                    { $or: [{ status: "completed" }, { status: "approved" }] },
                 ],
             });
 
