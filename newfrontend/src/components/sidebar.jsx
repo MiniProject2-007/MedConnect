@@ -9,36 +9,38 @@ import {
     MessageSquare,
     Settings,
     ChevronLeft,
+    LogOutIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDashboard } from "@/features/dashboard/components/dashboard-provider";
+import { SignOutButton } from "@clerk/clerk-react";
 
 const navItems = [
     {
         title: "Dashboard",
         icon: LayoutDashboard,
-        href: "/",
+        href: "/dashboard",
     },
     {
         title: "Book Appointment",
         icon: Calendar,
-        href: "/book-appointment",
+        href: "/dashboard/book-appointment",
     },
     {
         title: "My Consultations",
         icon: ClipboardList,
-        href: "/consultations",
+        href: "/dashboard/consultations",
     },
     {
         title: "Chat with Doctor",
         icon: MessageSquare,
-        href: "/chat",
+        href: "/dashboard/chat",
     },
     {
         title: "Settings",
         icon: Settings,
-        href: "/settings",
+        href: "/dashboard/settings",
     },
 ];
 
@@ -67,14 +69,16 @@ export function Sidebar() {
                 <div className="flex h-16 items-center border-b px-6">
                     <Link
                         to="/"
-                        className="flex items-center gap-2 font-semibold"
+                        className="mr-4 flex items-center gap-2 font-semibold"
                     >
-                        {sidebarOpen ? (
-                            <span className="text-primary">HealthConnect</span>
-                        ) : (
-                            <span className="text-primary text-xl">H</span>
-                        )}
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                            <span className="text-lg font-bold">H</span>
+                        </div>
+                        <span className="hidden text-xl font-bold md:inline-block">
+                            HealthConnect
+                        </span>
                     </Link>
+
                     <Button
                         variant="ghost"
                         size="icon"
@@ -110,35 +114,12 @@ export function Sidebar() {
                 </ScrollArea>
 
                 <div className="border-t p-4">
-                    {sidebarOpen ? (
-                        <div className="flex items-center gap-3">
-                            <Avatar>
-                                <AvatarImage
-                                    src={currentUser.profileImage}
-                                    alt="Profile"
-                                />
-                                <AvatarFallback>JD</AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                                <span className="text-sm font-medium">
-                                    {currentUser.name}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                    Patient
-                                </span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex justify-center">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                    src={currentUser.profileImage}
-                                    alt="Profile"
-                                />
-                                <AvatarFallback>JD</AvatarFallback>
-                            </Avatar>
-                        </div>
-                    )}
+                    <SignOutButton>
+                        <Button variant="ghost" className="w-full ">
+                            Sign Out
+                            <LogOutIcon className="h-5 w-5 ml-2" />
+                        </Button>
+                    </SignOutButton>
                 </div>
             </aside>
         </>

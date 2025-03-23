@@ -8,25 +8,23 @@ import { NotificationsSection } from "../components/notifications-section";
 
 function DashboardPage() {
     return (
-        <DashboardLayout>
-            <div className="grid gap-6 p-6 md:grid-cols-12">
-                <div className="col-span-12">
-                    <WelcomeSection />
-                </div>
-                <div className="col-span-12 md:col-span-8">
-                    <UpcomingAppointments />
-                </div>
-                <div className="col-span-12 md:col-span-4">
-                    <QuickActions />
-                </div>
-                <div className="col-span-12 md:col-span-8">
-                    <PastConsultations />
-                </div>
-                <div className="col-span-12 md:col-span-4">
-                    <NotificationsSection />
-                </div>
+        <div className="grid gap-6 p-6 md:grid-cols-12">
+            <div className="col-span-12">
+                <WelcomeSection />
             </div>
-        </DashboardLayout>
+            <div className="col-span-12 md:col-span-8">
+                <UpcomingAppointments />
+            </div>
+            <div className="col-span-12 md:col-span-4">
+                <QuickActions />
+            </div>
+            <div className="col-span-12 md:col-span-8">
+                <PastConsultations />
+            </div>
+            <div className="col-span-12 md:col-span-4">
+                <NotificationsSection />
+            </div>
+        </div>
     );
 }
 

@@ -1,9 +1,5 @@
-import React from "react";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { Search, Bell, Menu } from "lucide-react";
-
-import { Sidebar } from "@/components/sidebar";
+import React, { useState, useEffect } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,24 +11,24 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Search, Bell, Menu, LogOut, User, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import Sidebar from "@/components/sidebar";
+import { toast } from "sonner";
 import { useDashboard } from "./dashboard-provider";
 
-export function DashboardLayout(props) {
-    const { sidebarOpen, toggleSidebar } = useDashboard();
-    const [pathname, setPathname] = useState("/");
+export function DashboardLayout({ children }) {
+    const { sidebarOpen, toggleSidebar, currentUser } = useDashboard();
+    const location = useLocation();
     const [isMounted, setIsMounted] = useState(false);
+    const [searchFocused, setSearchFocused] = useState(false);
 
-    // Prevent hydration errors
     useEffect(() => {
         setIsMounted(true);
-        setPathname(window.location.pathname);
     }, []);
 
     const handleNotificationClick = () => {
-        toast("Notifications", {
-            description: "You have 3 unread notifications.",
-        });
+        toast.success("Clicked");
     };
 
     if (!isMounted) {
@@ -40,104 +36,111 @@ export function DashboardLayout(props) {
     }
 
     return (
-        <div className="flex min-h-screen flex-col">
-            <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-6">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden"
-                    onClick={toggleSidebar}
-                >
-                    <Menu className="size-5" />
-                    <span className="sr-only">Toggle Menu</span>
-                </Button>
-
-                <a
-                    href="/"
-                    className="hidden items-center gap-2 font-semibold md:flex"
-                >
-                    <span className="text-primary">HealthConnect</span>
-                </a>
-
-                {/* <MainNav className="mx-6 hidden md:flex" /> */}
-
-                <div className="ml-auto flex items-center gap-4">
-                    <div className="relative hidden md:block">
-                        <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search..."
-                            className="w-[200px] pl-8 md:w-[240px] lg:w-[320px]"
-                        />
-                    </div>
-
+        <div className="h-screen flex flex-1">
+            <Sidebar pathname={location.pathname} />
+            <div className="h-screen overflow-auto w-full">
+                <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background/95 px-4 backdrop-blur-sm sm:px-6">
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="relative"
-                        onClick={handleNotificationClick}
+                        className="mr-2 md:hidden"
+                        onClick={toggleSidebar}
                     >
-                        <Bell className="size-5" />
-                        <Badge
-                            className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full p-0"
-                            variant="destructive"
-                        >
-                            3
-                        </Badge>
+                        <Menu className="h-5 w-5" />
+                        <span className="sr-only">Toggle Menu</span>
                     </Button>
 
-                    {/* <ModeToggle /> */}
+                    <div
+                        className={`relative hidden transition-all duration-200 md:block ${
+                            searchFocused
+                                ? "w-[280px] lg:w-[320px]"
+                                : "w-[200px] lg:w-[240px]"
+                        }`}
+                    >
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Search..."
+                            className="pl-9 pr-4 h-9 rounded-full"
+                            onFocus={() => setSearchFocused(true)}
+                            onBlur={() => setSearchFocused(false)}
+                        />
+                    </div>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="relative size-8 rounded-full"
-                            >
-                                <Avatar className="size-8">
-                                    <AvatarImage
-                                        src="/placeholder.svg?height=32&width=32"
-                                        alt="User"
-                                    />
-                                    <AvatarFallback>JD</AvatarFallback>
-                                </Avatar>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            className="w-56"
-                            align="end"
-                            forceMount
+                    <div className="ml-auto flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="relative btn-icon-pulse"
+                            onClick={handleNotificationClick}
                         >
-                            <DropdownMenuLabel className="font-normal">
-                                <div className="flex flex-col space-y-1">
-                                    <p className="text-sm font-medium leading-none">
-                                        John Doe
-                                    </p>
-                                    <p className="text-xs leading-none text-muted-foreground">
-                                        john.doe@example.com
-                                    </p>
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                                <a href="/settings">Profile Settings</a>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                                <a href="/consultations">Appointments</a>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                                <a href="/settings">Support</a>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>Log out</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </header>
+                            <Bell className="h-5 w-5" />
+                            <Badge
+                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0"
+                                variant="destructive"
+                            >
+                                3
+                            </Badge>
+                        </Button>
 
-            <div className="flex flex-1">
-                <Sidebar pathname={pathname} />
-                <main className="flex-1">{props.children}</main>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="relative h-9 w-9 rounded-full"
+                                >
+                                    <Avatar className="h-9 w-9 border-2 border-primary/10">
+                                        <AvatarImage
+                                            src="/placeholder.svg?height=36&width=36"
+                                            alt="User"
+                                        />
+                                        <AvatarFallback>JD</AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56" align="end">
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">
+                                            {currentUser.name}
+                                        </p>
+                                        <p className="text-xs leading-none text-muted-foreground">
+                                            {currentUser.email}
+                                        </p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        to="/settings"
+                                        className="flex items-center"
+                                    >
+                                        <User className="mr-2 h-4 w-4" />
+                                        <span>Profile</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        to="/settings"
+                                        className="flex items-center"
+                                    >
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        <span>Settings</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="flex items-center text-destructive">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Log out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </header>
+
+                <main className="flex-1 overflow-auto">
+                    <Outlet />
+                </main>
             </div>
         </div>
     );

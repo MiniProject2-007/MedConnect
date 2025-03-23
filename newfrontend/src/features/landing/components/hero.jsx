@@ -70,7 +70,7 @@ export function LandingHero() {
                         variants={itemVariants}
                     >
                         <motion.span
-                            className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary"
+                            className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary w-fit"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.5 }}
