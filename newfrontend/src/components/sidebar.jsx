@@ -33,11 +33,6 @@ const navItems = [
         href: "/dashboard/consultations",
     },
     {
-        title: "Chat with Doctor",
-        icon: MessageSquare,
-        href: "/dashboard/chat",
-    },
-    {
         title: "Settings",
         icon: Settings,
         href: "/dashboard/settings",
@@ -98,7 +93,7 @@ export function Sidebar() {
                                 variant="ghost"
                                 className={cn(
                                     "justify-start",
-                                    location.pathname === item.href &&
+                                    location.pathname.includes(item.href) &&
                                         "bg-sidebar-accent text-sidebar-accent-foreground",
                                     !sidebarOpen && "md:justify-center"
                                 )}
@@ -115,9 +110,12 @@ export function Sidebar() {
 
                 <div className="border-t p-4">
                     <SignOutButton>
-                        <Button variant="ghost" className="w-full ">
-                            Sign Out
-                            <LogOutIcon className="h-5 w-5 ml-2" />
+                        <Button
+                            variant="ghost"
+                            className="w-full flex items-center justify-center gap-2 transition-all duration-200  hover:bg-red-50 hover:text-red-600 focus:ring-2 cursor-pointer"
+                        >
+                            <span>Sign Out</span>
+                            <LogOutIcon className="h-4 w-4" />
                         </Button>
                     </SignOutButton>
                 </div>

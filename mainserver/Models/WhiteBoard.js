@@ -7,10 +7,6 @@ const whiteBoardSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-        appointmentId: {
-            type: String,
-            required: true,
-        },
         data: {
             type: String,
             required: true,

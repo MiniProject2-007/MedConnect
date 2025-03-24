@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import Sidebar from "@/components/sidebar";
 import { toast } from "sonner";
 import { useDashboard } from "./dashboard-provider";
+import { UserButton } from "@clerk/clerk-react";
 
 export function DashboardLayout({ children }) {
     const { sidebarOpen, toggleSidebar, currentUser } = useDashboard();
@@ -50,7 +51,7 @@ export function DashboardLayout({ children }) {
                         <span className="sr-only">Toggle Menu</span>
                     </Button>
 
-                    <div
+                    {/* <div
                         className={`relative hidden transition-all duration-200 md:block ${
                             searchFocused
                                 ? "w-[280px] lg:w-[320px]"
@@ -65,7 +66,7 @@ export function DashboardLayout({ children }) {
                             onFocus={() => setSearchFocused(true)}
                             onBlur={() => setSearchFocused(false)}
                         />
-                    </div>
+                    </div> */}
 
                     <div className="ml-auto flex items-center gap-2">
                         <Button
@@ -76,65 +77,13 @@ export function DashboardLayout({ children }) {
                         >
                             <Bell className="h-5 w-5" />
                             <Badge
-                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0"
+                                className="absolute right-2 top-1 flex h-2 w-2 items-center justify-center rounded-full p-0"
                                 variant="destructive"
                             >
                                 3
                             </Badge>
                         </Button>
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    className="relative h-9 w-9 rounded-full"
-                                >
-                                    <Avatar className="h-9 w-9 border-2 border-primary/10">
-                                        <AvatarImage
-                                            src="/placeholder.svg?height=36&width=36"
-                                            alt="User"
-                                        />
-                                        <AvatarFallback>JD</AvatarFallback>
-                                    </Avatar>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="end">
-                                <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">
-                                            {currentUser.name}
-                                        </p>
-                                        <p className="text-xs leading-none text-muted-foreground">
-                                            {currentUser.email}
-                                        </p>
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        to="/settings"
-                                        className="flex items-center"
-                                    >
-                                        <User className="mr-2 h-4 w-4" />
-                                        <span>Profile</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        to="/settings"
-                                        className="flex items-center"
-                                    >
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        <span>Settings</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="flex items-center text-destructive">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Log out</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <UserButton />
                     </div>
                 </header>
 

@@ -6,6 +6,8 @@ import { DashboardProvider } from "./features/dashboard/components/dashboard-pro
 import { DashboardLayout } from "./features/dashboard/components/dashboard-layout";
 import BookAppointmentPage from "./features/appointment/pages/book-appointment-page";
 import { useAuth } from "@clerk/clerk-react";
+import MyConsultationsPage from "./features/appointment/pages/my-consultations-page";
+import { Toaster } from "sonner";
 
 export default function App() {
     const { isSignedIn } = useAuth();
@@ -28,9 +30,14 @@ export default function App() {
                             path="book-appointment"
                             element={<BookAppointmentPage />}
                         />
+                        <Route
+                            path="consultations"
+                            element={<MyConsultationsPage />}
+                        />
                     </Route>
                 )}
             </Routes>
+            <Toaster />
         </div>
     );
 }

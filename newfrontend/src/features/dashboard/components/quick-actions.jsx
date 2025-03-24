@@ -32,7 +32,7 @@ const quickActions = [
 
 export function QuickActions() {
   return (
-    <Card className="bg-white">
+    <Card className="bg-white h-full">
       <CardHeader>
         <CardTitle>Quick Actions</CardTitle>
         <CardDescription>Frequently used features</CardDescription>

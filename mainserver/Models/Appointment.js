@@ -2,11 +2,7 @@ import mongoose from "mongoose";
 
 const appointmentSchema = new mongoose.Schema(
     {
-        userId1: {
-            type: String,
-            required: true,
-        },
-        userId2: {
+        userId: {
             type: String,
             required: true,
         },
@@ -15,13 +11,38 @@ const appointmentSchema = new mongoose.Schema(
             required: true,
         },
         timeSlot: {
-            type: Number,
+            type: String,
             required: true,
+        },
+        reason: {
+            type: String,
+            required: true,
+        },
+        appointmentType: {
+            type: String,
+            enum: ["in-person", "video"],
         },
         status: {
             type: String,
             enum: ["pending", "approved", "rejected", "completed", "cancelled"],
             default: "pending",
+        },
+        meetingId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "meeting",
+        },
+        records: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "record",
+            },
+        ],
+        whiteBoardId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "whiteBoard",
+        },
+        summary: {
+            type: String,
         },
     },
     { timestamps: true }

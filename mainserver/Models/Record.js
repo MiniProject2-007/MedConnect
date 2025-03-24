@@ -2,14 +2,7 @@ import mongoose from "mongoose";
 
 const recordSchema = new mongoose.Schema(
     {
-        ownerId: {
-            type: String,
-            required: true,
-        },
-        sharedWith: {
-            type: [String],
-        },
-        meetingId: {
+        userId: {
             type: String,
             required: true,
         },
@@ -23,7 +16,7 @@ const recordSchema = new mongoose.Schema(
         recordType: {
             type: String,
             required: true,
-            enum: ["prescription", "report", "recording", "other"],
+            enum: ["prescription", "report", "recording", "other","transcript"],
             default: "other",
         },
         key: {

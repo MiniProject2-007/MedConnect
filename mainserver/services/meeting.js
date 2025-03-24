@@ -1,19 +1,15 @@
 import Meeting from "../Models/Meeting.js";
 
 class MeetingService {
-    createMeeting = async (appointment) => {
+    createMeeting = async () => {
         try {
             const slug = Math.random().toString(36).substring(5);
             console.log("slug", slug);
             const meeting = await Meeting.create({
-                appointmentId: appointment._id,
-                time: appointment.timeSlot,
-                date: appointment.date,
-                status: "upcoming",
-                duration: 60,
                 slug,
+                duration: 30,
             });
-            return { success: true, slug };
+            return { success: true, meeting: meeting };
         } catch (err) {
             console.log("Create Meeting Error: ", err);
             return { success: false, slug: null };

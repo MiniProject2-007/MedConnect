@@ -1,7 +1,6 @@
 import { validationResult } from "express-validator";
 import Appointment from "../Models/Appointment.js";
 import { format } from "date-fns";
-import Doctor from "../Models/Doctor.js";
 import meetingService from "./meeting.js";
 import userService from "./user.js";
 import { sendAppointmentMessage } from "../lib/email.js";
@@ -13,33 +12,20 @@ class AppointmentService {
             if (!errors.isEmpty()) {
                 return res.status(400).json({ errors: errors.array() });
             }
-            const { userId1, userId2, date, timeSlot } = req.body;
+            const { userId, date, timeSlot, reason, appointmentType } = req.body;
 
-            let userAppointments = await Appointment.find({
-                userId1: userId1,
-                date: format(new Date(date), "yyyy-MM-dd"),
-                timeSlot: timeSlot,
-            });
+            // let userAppointments = await Appointment.find({
+            //     userId: userId,
+            // });
 
-            if (userAppointments.length > 0) {
-                return res
-                    .status(400)
-                    .json({ error: "Appointment already exists" });
-            }
-
-            userAppointments = await Appointment.find({
-                userId1: userId1,
-            });
-
-            if (userAppointments.length >= 2) {
-                return res
-                    .status(400)
-                    .json({ error: "Maximum 2 appointments allowed" });
-            }
+            // if (userAppointments.length >= 2) {
+            //     return res
+            //         .status(400)
+            //         .json({ error: "Maximum 2 appointments allowed" });
+            // }
             const isAvailable = await this.isTimeSlotAvailable(
                 format(new Date(date), "yyyy-MM-dd"),
-                timeSlot,
-                userId2
+                timeSlot
             );
 
             if (!isAvailable) {
@@ -49,11 +35,19 @@ class AppointmentService {
             }
 
             const appointment = await Appointment.create({
-                userId1,
-                userId2,
+                userId,
                 date,
                 timeSlot,
+                reason,
+                appointmentType,
             });
+
+            if (appointment.appointmentType === "video") {
+                const meeting = await meetingService.createMeeting();
+                await Appointment.findByIdAndUpdate(appointment._id, {
+                    meetingId: meeting.meeting._id,
+                });
+            }
 
             res.status(201).json(appointment);
         } catch (err) {
@@ -62,12 +56,11 @@ class AppointmentService {
         }
     };
 
-    isTimeSlotAvailable = async (date, timeSlot, userid2) => {
+    isTimeSlotAvailable = async (date, timeSlot) => {
         try {
             const appointments = await Appointment.find({
                 date,
-                timeSlot,
-                userid2,
+                timeSlot
             });
             return appointments.length === 0;
         } catch (err) {
@@ -80,60 +73,10 @@ class AppointmentService {
         try {
             const { userid } = req.headers;
             const appointments = await Appointment.find({
-                $or: [{ userId1: userid }, { userId2: userid }],
+                userId: userid,
             });
 
-            const appointmentsRes = await Promise.all(
-                appointments.map(async (appointment) => {
-                    const meeting = await meetingService.getAppointmentMeeting(
-                        appointment._id
-                    );
-
-                    if (
-                        await this.isAppointmentPassed(
-                            appointment.date,
-                            appointment.timeSlot
-                        )
-                    ) {
-                        await Appointment.findByIdAndUpdate(appointment._id, {
-                            status: "completed",
-                        });
-                        appointment.status = "completed";
-                    }
-                    if (appointment.userId1 === userid) {
-                        const user2 = await Doctor.findOne({
-                            userId: appointment.userId2,
-                        });
-
-                        return {
-                            _id: appointment._id,
-                            userId1: appointment.userId1,
-                            userId2: appointment.userId2,
-                            date: appointment.date,
-                            timeSlot: appointment.timeSlot,
-                            status: appointment.status,
-                            with: `${user2.firstName} ${user2.lastName}`,
-                            meeting: meeting?.slug,
-                        };
-                    } else {
-                        const user1 = await userService.getUserInfo(
-                            appointment.userId1
-                        );
-                        return {
-                            _id: appointment._id,
-                            userId1: appointment.userId1,
-                            userId2: appointment.userId2,
-                            date: appointment.date,
-                            timeSlot: appointment.timeSlot,
-                            status: appointment.status,
-                            with: `${user1.firstName} ${user1.lastName}`,
-                            meeting: meeting?.slug,
-                        };
-                    }
-                })
-            );
-
-            res.status(200).json(appointmentsRes);
+            res.status(200).json(appointments);
         } catch (err) {
             console.log("Get Appointments Error: ", err);
             res.status(500).json({ error: "Internal Server Error" });
@@ -146,7 +89,7 @@ class AppointmentService {
             const { id } = req.params;
             const appointment = await Appointment.findById(id);
 
-            if (appointment.userId1 !== userid) {
+            if (appointment.userId !== userid) {
                 return res.status(403).json({ error: "Unauthorized" });
             }
             if (!appointment) {
@@ -160,123 +103,86 @@ class AppointmentService {
         }
     };
 
-    approveAppointment = async (req, res) => {
+    getAvailableTimeSlots = async (req, res) => {
         try {
-            const { userid } = req.headers;
-            const { id } = req.params;
-            const appointment = await Appointment.findById(id);
+            const { date } = req.params;
+            console.log("Date: ", date);
+            const appointments = await Appointment.find({ date });
 
-            if (appointment.userId2 !== userid) {
-                return res.status(403).json({ error: "Unauthorized" });
-            }
-            if (!appointment) {
-                return res.status(404).json({ error: "Appointment not found" });
-            }
-            await Appointment.findByIdAndUpdate(id, { status: "approved" });
-            const meeting = await meetingService.createMeeting(appointment);
-            const link = `${process.env.FRONTEND_URL}/meeting/joinmeeting/${meeting.slug}`;
+            const availableSlots = [
+                "09:00 AM - 09:30 AM",
+                "09:30 AM - 10:00 AM",
+                "10:00 AM - 10:30 AM",
+                "10:30 AM - 11:00 AM",
+                "11:00 AM - 11:30 AM",
+                "11:30 AM - 12:00 PM",
+                "12:00 PM - 12:30 PM",
+                "12:30 PM - 01:00 PM",
+                "01:00 PM - 01:30 PM",
+                "01:30 PM - 02:00 PM",
+                "02:00 PM - 02:30 PM",
+                "02:30 PM - 03:00 PM",
+                "03:00 PM - 03:30 PM",
+                "03:30 PM - 04:00 PM",
+                "04:00 PM - 04:30 PM",
+                "04:30 PM - 05:00 PM",
+            ];
 
-            const userids = [appointment.userId1, appointment.userId2];
-
-            userids.map(async (userid) => {
-                try {
-                    const email = await userService.getUserEmail(userid);
-                    await sendAppointmentMessage(email, link);
-                } catch (err) {
-                    console.log("Email Error: ", err);
-                }
-            });
-            res.status(200).json({ message: "Appointment approved" });
-        } catch (err) {
-            console.log("Approve Appointment Error: ", err);
-            res.status(500).json({ error: "Internal Server Error" });
-        }
-    };
-
-    rejectAppointment = async (req, res) => {
-        try {
-            const { userid } = req.headers;
-            const { id } = req.params;
-            const appointment = await Appointment.findById(id);
-
-            if (appointment.userId2 !== userid) {
-                return res.status(403).json({ error: "Unauthorized" });
-            }
-            if (!appointment) {
-                return res.status(404).json({ error: "Appointment not found" });
-            }
-            await Appointment.findByIdAndUpdate(id, { status: "rejected" });
-            res.status(200).json({ message: "Appointment rejected" });
-        } catch (err) {
-            console.log("Reject Appointment Error: ", err);
-            res.status(500).json({ error: "Internal Server Error" });
-        }
-    };
-
-    getCompletedAppointments = async (req, res) => {
-        try {
-            const { userid } = req.headers;
-            console.log(userid);
-            const appointments = await Appointment.find({
-                $and: [
-                    { $or: [{ userId1: userid }, { userId2: userid }] },
-                    { $or: [{ status: "completed" }, { status: "approved" }] },
-                ],
-            });
-
-            const appointmentsRes = await Promise.all(
-                appointments.map(async (appointment) => {
-                    const meeting = await meetingService.getAppointmentMeeting(
-                        appointment._id
-                    );
-                    if (appointment.userId1 === userid) {
-                        const user2 = await Doctor.findOne({
-                            userId: appointment.userId2,
-                        });
-
-                        return {
-                            _id: appointment._id,
-                            userId1: appointment.userId1,
-                            userId2: appointment.userId2,
-                            date: appointment.date,
-                            timeSlot: appointment.timeSlot,
-                            status: appointment.status,
-                            with: `${user2.firstName} ${user2.lastName}`,
-                            meeting: meeting?.slug,
-                        };
-                    } else {
-                        const user1 = await userService.getUserInfo(
-                            appointment.userId1
-                        );
-                        return {
-                            _id: appointment._id,
-                            userId1: appointment.userId1,
-                            userId2: appointment.userId2,
-                            date: appointment.date,
-                            timeSlot: appointment.timeSlot,
-                            status: appointment.status,
-                            with: `${user1.firstName} ${user1.lastName}`,
-                            meeting: meeting?.slug,
-                        };
+            const availableSlotsFiltered = availableSlots.filter((slot) => {
+                let isAvailable = true;
+                for (let i = 0; i < appointments.length; i++) {
+                    if (appointments[i].timeSlot === slot) {
+                        isAvailable = false;
+                        break;
                     }
-                })
-            );
+                }
+                return isAvailable;
+            });
 
-            res.status(200).json(appointmentsRes);
+            res.status(200).json(availableSlotsFiltered);
         } catch (err) {
-            console.log("Get Completed Appointments Error: ", err);
+            console.log("Get Available Time Slots Error: ", err);
             res.status(500).json({ error: "Internal Server Error" });
         }
     };
 
-    isAppointmentPassed = async (date, timeSlot) => {
+    getUpcomingAppointments = async (req, res) => {
         try {
-            const currentTime = new Date();
-            const appointmentTime = new Date(`${date}T${timeSlot}:00`);
-            return currentTime > appointmentTime;
+            const { userid } = req.headers;
+            const { date } = req.params;
+            console.log("Date: ", date, userid);
+            const appointments = await Appointment.find({
+                userId: userid,
+                date: { $gte: date },
+            });
+
+            appointments.sort((a, b) => {
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            res.status(200).json(appointments);
         } catch (err) {
-            console.log("Is Appointment Passed Error: ", err);
-            return false;
+            console.log("Get Upcoming Appointments Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
+
+    getPastAppointments = async (req, res) => {
+        try {
+            const { userid } = req.headers;
+            const { date } = req.params;
+            const appointments = await Appointment.find({
+                userId: userid,
+                date: { $lt: date },
+            });
+
+            appointments.sort((a, b) => {
+                return new Date(b.date) - new Date(a.date);
+            });
+            res.status(200).json(appointments);
+        } catch (err) {
+            console.log("Get Past Appointments Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
         }
     };
 }
