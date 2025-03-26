@@ -1,10 +1,11 @@
-import React from "react"
+import React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Calendar, Video, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router";
+import { SignedOut, SignInButton } from "@clerk/clerk-react";
 
 export function LandingHero() {
     const [isVisible, setIsVisible] = useState(false);
@@ -12,13 +13,6 @@ export function LandingHero() {
     useEffect(() => {
         setIsVisible(true);
     }, []);
-
-    const handleGetStarted = () => {
-        toast.success("Welcome to HealthConnect!", {
-            description: "Your journey to better healthcare begins now.",
-            position: "top-center",
-        });
-    };
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -96,13 +90,13 @@ export function LandingHero() {
                             className="flex flex-col sm:flex-row gap-4"
                             variants={itemVariants}
                         >
-                            <Button size="lg" onClick={handleGetStarted}>
-                                Get Started
-                            </Button>
+                            <SignedOut>
+                                <SignInButton forceRedirectUrl="/dashboard">
+                                    <Button size="lg">Get Started</Button>
+                                </SignInButton>
+                            </SignedOut>
                             <Button size="lg" variant="outline" asChild>
-                                <Link to="#how-it-works">
-                                    See How It Works
-                                </Link>
+                                <Link to="#how-it-works">See How It Works</Link>
                             </Button>
                         </motion.div>
 
