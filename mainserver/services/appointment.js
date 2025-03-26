@@ -2,8 +2,8 @@ import { validationResult } from "express-validator";
 import Appointment from "../Models/Appointment.js";
 import { format } from "date-fns";
 import meetingService from "./meeting.js";
-import userService from "./user.js";
-import { sendAppointmentMessage } from "../lib/email.js";
+import Record from "../Models/Record.js";
+import WhiteBoard from "../Models/WhiteBoard.js";
 
 class AppointmentService {
     createAppointment = async (req, res) => {
@@ -154,7 +154,7 @@ class AppointmentService {
             const appointments = await Appointment.find({
                 userId: userid,
                 date: { $gte: date },
-            });
+            }).populate("meeting records whiteboard");
 
             appointments.sort((a, b) => {
                 return new Date(a.date) - new Date(b.date);
@@ -174,11 +174,11 @@ class AppointmentService {
             const appointments = await Appointment.find({
                 userId: userid,
                 date: { $lt: date },
-            });
+            }).populate("meeting records whiteboard");
 
             appointments.sort((a, b) => {
                 return new Date(b.date) - new Date(a.date);
-            });
+            })
             res.status(200).json(appointments);
         } catch (err) {
             console.log("Get Past Appointments Error: ", err);

@@ -8,11 +8,12 @@ import BookAppointmentPage from "./features/appointment/pages/book-appointment-p
 import { useAuth } from "@clerk/clerk-react";
 import MyConsultationsPage from "./features/appointment/pages/my-consultations-page";
 import { Toaster } from "sonner";
+import JoinMeetingPage from "./features/meeting/pages/join-meeting-page";
 
 export default function App() {
     const { isSignedIn } = useAuth();
     return (
-        <div className="w-full h-full font-main">
+        <div className="w-full h-full font-main bg-gray-50">
             <Routes>
                 <Route path="/" element={<LandingPage />} />
 
@@ -33,6 +34,10 @@ export default function App() {
                         <Route
                             path="consultations"
                             element={<MyConsultationsPage />}
+                        />
+                        <Route
+                            path="meeting/join/:id"
+                            element={<JoinMeetingPage />}
                         />
                     </Route>
                 )}

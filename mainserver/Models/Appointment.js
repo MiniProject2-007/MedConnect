@@ -27,19 +27,19 @@ const appointmentSchema = new mongoose.Schema(
             enum: ["pending", "approved", "rejected", "completed", "cancelled"],
             default: "pending",
         },
-        meetingId: {
+        meeting: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "meeting",
+            ref: "Meeting",
         },
         records: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "record",
+                ref: "Record",
             },
         ],
-        whiteBoardId: {
+        whiteboard: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "whiteBoard",
+            ref: "Whiteboard",
         },
         summary: {
             type: String,

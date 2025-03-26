@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router";
 import { ClerkProvider } from "@clerk/clerk-react";
+import { SocketProvider } from "./features/meeting/provider/socket-provider";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -14,9 +15,11 @@ if (!PUBLISHABLE_KEY) {
 createRoot(document.getElementById("root")).render(
     <StrictMode>
         <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
+            <SocketProvider>
+                <BrowserRouter>
+                    <App />
+                </BrowserRouter>
+            </SocketProvider>
         </ClerkProvider>
     </StrictMode>
 );
