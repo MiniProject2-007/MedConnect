@@ -14,15 +14,6 @@ class AppointmentService {
             }
             const { userId, date, timeSlot, reason, appointmentType } = req.body;
 
-            // let userAppointments = await Appointment.find({
-            //     userId: userId,
-            // });
-
-            // if (userAppointments.length >= 2) {
-            //     return res
-            //         .status(400)
-            //         .json({ error: "Maximum 2 appointments allowed" });
-            // }
             const isAvailable = await this.isTimeSlotAvailable(
                 format(new Date(date), "yyyy-MM-dd"),
                 timeSlot
@@ -42,10 +33,10 @@ class AppointmentService {
                 appointmentType,
             });
 
-            if (appointment.appointmentType === "video") {
+            if (appointment.appointmentType.trim().toLocaleLowerCase() === "video") {
                 const meeting = await meetingService.createMeeting();
                 await Appointment.findByIdAndUpdate(appointment._id, {
-                    meetingId: meeting.meeting._id,
+                    meeting: meeting.meeting._id,
                 });
             }
 

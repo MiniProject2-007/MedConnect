@@ -107,7 +107,7 @@ export default function MyConsultations() {
                     {upcomingConsultations.length > 0 ? (
                         upcomingConsultations.map((consultation) => (
                             <UpcomingConsultationCard
-                                key={consultation.id}
+                                key={consultation._id}
                                 consultation={consultation}
                             />
                         ))
@@ -120,7 +120,7 @@ export default function MyConsultations() {
                     {pastConsultations.length > 0 ? (
                         pastConsultations.map((consultation) => (
                             <PastConsultationCard
-                                key={consultation.id}
+                                key={consultation._id}
                                 consultation={consultation}
                             />
                         ))

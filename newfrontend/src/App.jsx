@@ -9,6 +9,7 @@ import { useAuth } from "@clerk/clerk-react";
 import MyConsultationsPage from "./features/appointment/pages/my-consultations-page";
 import { Toaster } from "sonner";
 import JoinMeetingPage from "./features/meeting/pages/join-meeting-page";
+import MeetingRoomPage from "./features/meeting/pages/meetin-room-page";
 
 export default function App() {
     const { isSignedIn } = useAuth();
@@ -41,6 +42,8 @@ export default function App() {
                         />
                     </Route>
                 )}
+
+                <Route path="/meeting/room/:id" element={<MeetingRoomPage />} />
             </Routes>
             <Toaster />
         </div>

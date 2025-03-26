@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Video, Mic, MicOff, VideoOff, Phone, User } from "lucide-react";
 import { useSocket } from "../hooks/use-socket";
-import { useUser } from "@clerk/clerk-react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     Card,
     CardContent,
@@ -19,7 +18,7 @@ const JoinMeeting = () => {
     const [isVideoOn, setIsVideoOn] = useState(false);
     const [localStream, setLocalStream] = useState(null);
     const socket = useSocket();
-    const { slug } = useParams();
+    const navigate = useNavigate()
 
     const videoRef = useRef(null);
     const toggleMic = () => setIsMicOn(!isMicOn);
@@ -57,15 +56,13 @@ const JoinMeeting = () => {
 
     const handleJoinMeeting = (e) => {
         e.preventDefault();
-        socket.emit("room:join", { slug, email });
+        socket.emit("room:join", { slug: id });
     };
 
     useEffect(() => {
         socket.on("room:join", (data) => {
-            const { email, room } = data;
-            router.push(`/meeting/live/${slug}`);
+            navigate(`/meeting/room/${id}`);
         });
-
         return () => {
             if (localStream) {
                 localStream.getTracks().forEach((track) => track.stop());
