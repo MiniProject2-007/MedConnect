@@ -53,10 +53,10 @@ const MeetingRoom = ({ slug }) => {
             const videoTrack = myStream.getVideoTracks()[0];
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
-                setIsVideoOn(videoTrack.enabled);
+                setIsVideoOn(!isVideoOn);
             }
         }
-    }, [myStream]);
+    }, [myStream, isVideoOn]);
 
     const handleEndCall = useCallback(() => {
         if (myStream) {
@@ -70,7 +70,7 @@ const MeetingRoom = ({ slug }) => {
         setRemoteStream(null);
         setCallStarted(false);
         socket.emit("call:end", { to: remoteSocketId });
-        navigate("/dashboard");
+        navigate("/dashboard"); // Or wherever you want to redirect after call ends
     }, [myStream, remoteStream, remoteSocketId, socket, navigate]);
 
     // Update video refs when streams change
@@ -116,7 +116,7 @@ const MeetingRoom = ({ slug }) => {
                     video: true,
                 });
                 setMyStream(stream);
-                console.log("Incoming Call", from, offer);
+                console.log(`Incoming Call`, from, offer);
                 const ans = await peer.getAnswer(offer);
                 socket.emit("call:accepted", { to: from, ans });
             } catch (error) {
@@ -210,6 +210,16 @@ const MeetingRoom = ({ slug }) => {
             console.error("Error sharing screen:", error);
         }
     }, [isScreenSharing]);
+    
+    useEffect(() => {
+        peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
+        return () => {
+            peer.peer.removeEventListener(
+                "negotiationneeded",
+                handleNegoNeeded
+            );
+        };
+    }, [handleNegoNeeded]);
 
     const handleNegoNeedIncomming = useCallback(
         async ({ from, offer }) => {
