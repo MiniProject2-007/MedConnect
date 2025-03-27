@@ -13,15 +13,17 @@ import {
     Loader2,
     Presentation,
     Clock,
+    ScreenShare,
 } from "lucide-react";
 import { useSocket } from "../hooks/use-socket";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import SideContent from "./side-content";
 import peer from "../services/peer";
 import { addMessage } from "@/lib/redux/features/chatSlice";
 
-const MeetingRoom = ({ slug }) => {
+const MeetingRoom = ({}) => {
+    const { id: slug } = useParams();
     const socket = useSocket();
     const [remoteSocketId, setRemoteSocketId] = useState(null);
     const [myStream, setMyStream] = useState(null);
@@ -202,7 +204,7 @@ const MeetingRoom = ({ slug }) => {
 
     const handleScreenShare = useCallback(async () => {
         try {
-            if(isScreenSharing){
+            if (isScreenSharing) {
                 setIsScreenSharing(false);
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: true,
@@ -217,7 +219,7 @@ const MeetingRoom = ({ slug }) => {
                 } else {
                     peer.peer.addTrack(videoTrack, stream);
                 }
-            }else{
+            } else {
                 const stream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
                     audio: true,

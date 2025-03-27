@@ -5,7 +5,7 @@ const rooms = new Map();
 
 async function readSnapshotIfExists(roomId) {
     try {
-        const whiteboard = await WhiteBoard.findOne({ id: roomId });
+        const whiteboard = await WhiteBoard.findOne({ slug: roomId });
         if (!whiteboard) return undefined;
         return JSON.parse(whiteboard.data);
     } catch (e) {
@@ -18,9 +18,9 @@ async function saveSnapshot(roomId, snapshot) {
     try {
         const data = JSON.stringify(snapshot);
         await WhiteBoard.updateOne(
-            { id: roomId },
-            { id: roomId, data },
-            { upsert: true } 
+            { slug: roomId },
+            { slug: roomId, data },
+            { upsert: true }
         );
     } catch (e) {
         console.error(`Error saving snapshot for room ${roomId}:`, e);
@@ -45,12 +45,14 @@ export async function makeOrLoadRoom(roomId) {
             const room = new TLSocketRoom({
                 initialSnapshot,
                 onSessionRemoved(room, args) {
-                    console.log("Client disconnected", args.sessionId, roomId);
-                    if (args.numSessionsRemaining === 0) {
-                        console.log("Closing room", roomId);
-                        room.close();
-                        rooms.delete(roomId);
-                    }
+                    setTimeout(() => {
+                        console.log("Client disconnected", args.sessionId, roomId);
+                        if (args.numSessionsRemaining === 0) {
+                            console.log("Closing room", roomId);
+                            room.close();
+                            rooms.delete(roomId);
+                        }
+                    }, 2000);
                 },
                 onDataChange() {
                     console.log("Data changed for room", roomId);

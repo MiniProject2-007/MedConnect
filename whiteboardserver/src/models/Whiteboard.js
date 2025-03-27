@@ -2,19 +2,19 @@ import mongoose from "mongoose";
 
 const whiteBoardSchema = new mongoose.Schema(
     {
-        id: {
+        slug: {
             type: String,
             required: true,
             unique: true,
         },
         data: {
             type: String,
-            required: true, 
+            required: true,
         },
         lastModified: {
             type: Date,
-            default: Date.now, 
-        },
+            default: Date.now
+        }
     },
     {
         timestamps: true,

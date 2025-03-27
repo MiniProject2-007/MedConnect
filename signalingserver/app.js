@@ -56,6 +56,7 @@ io.on("connection", (socket) => {
 
     socket.on("chat:message", (data) => {
         const { room, message } = data;
+        console.log("chat:message", message);
         io.to(room).emit("chat:message", message);
     });
 

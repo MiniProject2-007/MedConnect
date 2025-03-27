@@ -12,15 +12,16 @@ class RecordService {
             const key = generateKey(originalname);
 
             await uploadFile({ buffer, mimetype: file.mimetype }, key);
-            const { ownerId, description, meetingId } = req.body;
+            const { userId, description, meetingId } = req.body;
 
             const record = new Record({
-                ownerId,
-                sharedWith: [],
+                userId: userId,
                 name: originalname,
-                description,
-                key,
-                meetingId,
+                description: description,
+                key: key,
+                meetingId: meetingId,
+                recordType:"other",
+                status: "active",
             });
 
             await record.save();
