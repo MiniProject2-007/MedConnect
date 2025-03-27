@@ -1,21 +1,20 @@
-"use client"
-
+import React from "react"
 import { useRef, useEffect, useState, useCallback } from "react"
 import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Phone,
-  MessageSquare,
-  Loader2,
-  Presentation,
-  Users,
-  ScreenShare,
-  Maximize,
-  Minimize,
-  Volume2,
-  VolumeX,
+    Mic,
+    MicOff,
+    Video,
+    VideoOff,
+    Phone,
+    MessageSquare,
+    Loader2,
+    Presentation,
+    Users,
+    ScreenShare,
+    Maximize,
+    Minimize,
+    Volume2,
+    VolumeX,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useSocket } from "../hooks/use-socket"
@@ -25,8 +24,10 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Sheet } from "@/components/ui/sheet"
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
+import SideContent from "./side-content"
+
 
 const createPeer = () => {
   const peer = {
