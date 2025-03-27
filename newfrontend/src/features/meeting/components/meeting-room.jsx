@@ -12,7 +12,7 @@ import {
     MessageSquare,
     Loader2,
     Presentation,
-    ScreenShare,
+    Clock,
 } from "lucide-react";
 import { useSocket } from "../hooks/use-socket";
 import { useNavigate } from "react-router";
@@ -30,13 +30,46 @@ const MeetingRoom = ({ slug }) => {
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOn, setIsVideoOn] = useState(true);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [meetingDuration, setMeetingDuration] = useState(0);
+    const [meetingStartTime, setMeetingStartTime] = useState(null);
     const messages = useAppSelector((state) => state.chat.chat);
-    const [isScreenSharing, setIsScreenSharing] = useState(false);
     const dispatch = useAppDispatch();
 
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
     const navigate = useNavigate();
+    const durationTimerRef = useRef(null);
+
+    const formatDuration = (seconds) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        return [
+            hours > 0 ? String(hours).padStart(2, "0") : null,
+            String(minutes).padStart(2, "0"),
+            String(secs).padStart(2, "0"),
+        ]
+            .filter(Boolean)
+            .join(":");
+    };
+
+    // Start meeting timer when call starts
+    useEffect(() => {
+        if (callStarted && !meetingStartTime) {
+            setMeetingStartTime(Date.now());
+
+            durationTimerRef.current = setInterval(() => {
+                setMeetingDuration((prev) => prev + 1);
+            }, 1000);
+        }
+
+        return () => {
+            if (durationTimerRef.current) {
+                clearInterval(durationTimerRef.current);
+            }
+        };
+    }, [callStarted, meetingStartTime]);
 
     const handleToggleAudio = useCallback(() => {
         if (myStream) {
@@ -44,9 +77,15 @@ const MeetingRoom = ({ slug }) => {
             if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
                 setIsMuted(!audioTrack.enabled);
+
+                // Notify other participants about mute status
+                socket.emit("user:audio:toggle", {
+                    to: remoteSocketId,
+                    isMuted: !audioTrack.enabled,
+                });
             }
         }
-    }, [myStream]);
+    }, [myStream, remoteSocketId, socket]);
 
     const handleToggleVideo = useCallback(() => {
         if (myStream) {
@@ -54,9 +93,15 @@ const MeetingRoom = ({ slug }) => {
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
                 setIsVideoOn(!isVideoOn);
+
+                // Notify other participants about video status
+                socket.emit("user:video:toggle", {
+                    to: remoteSocketId,
+                    isVideoOff: isVideoOn,
+                });
             }
         }
-    }, [myStream, isVideoOn]);
+    }, [myStream, isVideoOn, remoteSocketId, socket]);
 
     const handleEndCall = useCallback(() => {
         if (myStream) {
@@ -69,6 +114,13 @@ const MeetingRoom = ({ slug }) => {
         setMyStream(null);
         setRemoteStream(null);
         setCallStarted(false);
+
+        // Clear meeting timer
+        if (durationTimerRef.current) {
+            clearInterval(durationTimerRef.current);
+            durationTimerRef.current = null;
+        }
+
         socket.emit("call:end", { to: remoteSocketId });
         navigate("/dashboard"); // Or wherever you want to redirect after call ends
     }, [myStream, remoteStream, remoteSocketId, socket, navigate]);
@@ -150,67 +202,41 @@ const MeetingRoom = ({ slug }) => {
 
     const handleScreenShare = useCallback(async () => {
         try {
-            if (isScreenSharing) {
-                // Switching back to camera if already sharing screen
+            if(isScreenSharing){
+                setIsScreenSharing(false);
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: true,
                     video: true,
                 });
                 const videoTrack = stream.getVideoTracks()[0];
-                const sender = peer.peer
-                    .getSenders()
-                    .find((s) => s.track.kind === "video");
+                const sender = peer.peer.getSenders().find((s) => {
+                    return s.track.kind === videoTrack.kind;
+                });
                 if (sender) {
                     sender.replaceTrack(videoTrack);
                 } else {
                     peer.peer.addTrack(videoTrack, stream);
                 }
-                setIsScreenSharing(false);
-            } else {
-                // Start screen sharing
+            }else{
                 const stream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
                     audio: true,
                 });
                 const screenTrack = stream.getVideoTracks()[0];
-                const sender = peer.peer
-                    .getSenders()
-                    .find((s) => s.track.kind === "video");
+                const sender = peer.peer.getSenders().find((s) => {
+                    return s.track.kind === screenTrack.kind;
+                });
                 if (sender) {
                     sender.replaceTrack(screenTrack);
                 } else {
                     peer.peer.addTrack(screenTrack, stream);
                 }
-                // If the user stops sharing via browser controls,
-                // automatically switch back to the camera.
-                screenTrack.onended = async () => {
-                    try {
-                        const camStream =
-                            await navigator.mediaDevices.getUserMedia({
-                                audio: true,
-                                video: true,
-                            });
-                        const videoTrack = camStream.getVideoTracks()[0];
-                        const sender = peer.peer
-                            .getSenders()
-                            .find((s) => s.track.kind === "video");
-                        if (sender) {
-                            sender.replaceTrack(videoTrack);
-                        } else {
-                            peer.peer.addTrack(videoTrack, camStream);
-                        }
-                        setIsScreenSharing(false);
-                    } catch (error) {
-                        console.error("Error reverting to camera:", error);
-                    }
-                };
                 setIsScreenSharing(true);
             }
         } catch (error) {
             console.error("Error sharing screen:", error);
         }
-    }, [isScreenSharing]);
-    
+    }, []);
     useEffect(() => {
         peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
         return () => {
@@ -317,13 +343,21 @@ const MeetingRoom = ({ slug }) => {
             ) : (
                 <>
                     <div className="absolute right-4 bottom-20 h-48 w-64 rounded-lg overflow-hidden border-2 border-white shadow-lg">
-                        <video
-                            className="h-full w-full object-cover rounded-lg"
-                            playsInline
-                            autoPlay
-                            ref={localVideoRef}
-                            muted
-                        />
+                        {isVideoOn ? (
+                            <video
+                                className="h-full w-full object-cover rounded-lg"
+                                playsInline
+                                autoPlay
+                                ref={localVideoRef}
+                                muted
+                            />
+                        ) : (
+                            <div className="h-full w-full bg-gray-800 flex items-center justify-center rounded-lg">
+                                <div className="bg-gray-700 rounded-full p-6">
+                                    <VideoOff className="w-8 h-8 text-white" />
+                                </div>
+                            </div>
+                        )}
                         <div className="absolute bottom-2 left-2 flex gap-2">
                             {isMuted && (
                                 <div className="bg-red-500 rounded-full p-1">
@@ -411,11 +445,7 @@ const MeetingRoom = ({ slug }) => {
                                     <Presentation className="w-5 h-5" />
                                 </Button>
                                 <Button
-                                    variant={
-                                        isScreenSharing
-                                            ? "destructive"
-                                            : "outline"
-                                    }
+                                    variant="outline"
                                     size="icon"
                                     className="rounded-full w-10 h-10 border-[] hover:bg-gray-100"
                                     onClick={handleScreenShare}
@@ -445,10 +475,16 @@ const MeetingRoom = ({ slug }) => {
                 </>
             )}
             {callStarted && (
-                <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    Connected
-                </div>
+                <>
+                    <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        Connected
+                    </div>
+                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        <span>{formatDuration(meetingDuration)}</span>
+                    </div>
+                </>
             )}
         </div>
     );
