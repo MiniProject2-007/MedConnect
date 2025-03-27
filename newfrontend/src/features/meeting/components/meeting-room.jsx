@@ -27,106 +27,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import SideContent from "./side-content"
+import peerConnection from "../services/peer"
 
-// Add console logs to createPeer function
-const createPeer = () => {
-  console.log("[createPeer] Creating new RTCPeerConnection")
-  const peer = {
-    peer: new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:global.stun.twilio.com:3478" }],
-    }),
-
-    async getOffer() {
-      console.log("[createPeer] getOffer called, signaling state:", this.peer.signalingState)
-      if (this.peer.signalingState === "closed") {
-        console.log("[createPeer] Peer connection is closed, cannot create offer")
-        return null
-      }
-      try {
-        const offer = await this.peer.createOffer()
-        console.log("[createPeer] Offer created:", offer.type)
-        await this.peer.setLocalDescription(new RTCSessionDescription(offer))
-        console.log("[createPeer] Local description set")
-        return offer
-      } catch (error) {
-        console.error("[createPeer] Error creating offer:", error)
-        return null
-      }
-    },
-
-    async getAnswer(offer) {
-      console.log("[createPeer] getAnswer called, signaling state:", this.peer.signalingState)
-      if (this.peer.signalingState === "closed") {
-        console.log("[createPeer] Peer connection is closed, cannot create answer")
-        return null
-      }
-      try {
-        console.log("[createPeer] Setting remote description (offer)")
-        await this.peer.setRemoteDescription(new RTCSessionDescription(offer))
-        console.log("[createPeer] Remote description set, creating answer")
-        const answer = await this.peer.createAnswer()
-        console.log("[createPeer] Answer created:", answer.type)
-        await this.peer.setLocalDescription(new RTCSessionDescription(answer))
-        console.log("[createPeer] Local description set")
-        return answer
-      } catch (error) {
-        console.error("[createPeer] Error creating answer:", error)
-        return null
-      }
-    },
-
-    async setLocalDescription(ans) {
-      console.log("[createPeer] setLocalDescription called, signaling state:", this.peer.signalingState)
-      if (this.peer.signalingState === "closed") {
-        console.log("[createPeer] Peer connection is closed, cannot set remote description")
-        return
-      }
-      try {
-        console.log("[createPeer] Setting remote description (answer)")
-        await this.peer.setRemoteDescription(new RTCSessionDescription(ans))
-        console.log("[createPeer] Remote description set")
-      } catch (error) {
-        console.error("[createPeer] Error setting remote description:", error)
-      }
-    },
-
-    close() {
-      console.log("[createPeer] Closing peer connection")
-      this.peer.close()
-      console.log("[createPeer] Peer connection closed, signaling state:", this.peer.signalingState)
-    },
-  }
-
-  // Add ICE candidate event listener
-  peer.peer.addEventListener("icecandidate", (event) => {
-    if (event.candidate) {
-      console.log("[createPeer] New ICE candidate:", event.candidate.candidate.substring(0, 50) + "...")
-    } else {
-      console.log("[createPeer] ICE candidate gathering complete")
-    }
-  })
-
-  // Add connection state change listener
-  peer.peer.addEventListener("connectionstatechange", () => {
-    console.log("[createPeer] Connection state changed:", peer.peer.connectionState)
-  })
-
-  // Add ICE connection state change listener
-  peer.peer.addEventListener("iceconnectionstatechange", () => {
-    console.log("[createPeer] ICE connection state changed:", peer.peer.iceConnectionState)
-  })
-
-  // Add signaling state change listener
-  peer.peer.addEventListener("signalingstatechange", () => {
-    console.log("[createPeer] Signaling state changed:", peer.peer.signalingState)
-  })
-
-  return peer
-}
-
-// Add console.log at the beginning of the component
 const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "Patient" }) => {
-  console.log(`[MeetingRoom] Initializing with slug: ${slug}, doctor: ${doctorName}`)
   const socket = useSocket()
   const [remoteSocketId, setRemoteSocketId] = useState(null)
   const [myStream, setMyStream] = useState(null)
@@ -140,7 +43,6 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
   const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState("connecting")
   const [callDuration, setCallDuration] = useState(0)
-  const [peerConnection, setPeerConnection] = useState(null)
 
   const messages = useAppSelector((state) => state.chat?.chat || [])
   const dispatch = useAppDispatch()
@@ -150,21 +52,7 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
   const durationTimerRef = useRef(null)
   const navigate = useNavigate()
 
-  // Initialize peer connection
-  useEffect(() => {
-    console.log("[MeetingRoom] Creating new peer connection")
-    const newPeer = createPeer()
-    setPeerConnection(newPeer)
-
-    return () => {
-      console.log("[MeetingRoom] Cleaning up peer connection")
-      if (newPeer) {
-        newPeer.close()
-      }
-    }
-  }, [])
-
-  // Add console logs to handleToggleAudio
+  
   const handleToggleAudio = useCallback(() => {
     console.log("[MeetingRoom] Toggle audio called, current muted state:", isMuted)
     if (myStream) {
