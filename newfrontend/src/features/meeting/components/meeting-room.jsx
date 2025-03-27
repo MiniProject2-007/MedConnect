@@ -1,20 +1,19 @@
-import React from "react"
 import { useRef, useEffect, useState, useCallback } from "react"
 import {
-    Mic,
-    MicOff,
-    Video,
-    VideoOff,
-    Phone,
-    MessageSquare,
-    Loader2,
-    Presentation,
-    Users,
-    ScreenShare,
-    Maximize,
-    Minimize,
-    Volume2,
-    VolumeX,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Phone,
+  MessageSquare,
+  Loader2,
+  Presentation,
+  Users,
+  ScreenShare,
+  Maximize,
+  Minimize,
+  Volume2,
+  VolumeX,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useSocket } from "../hooks/use-socket"
@@ -28,41 +27,105 @@ import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/comp
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import SideContent from "./side-content"
 
-
+// Add console logs to createPeer function
 const createPeer = () => {
+  console.log("[createPeer] Creating new RTCPeerConnection")
   const peer = {
     peer: new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:global.stun.twilio.com:3478" }],
     }),
 
     async getOffer() {
-      const offer = await this.peer.createOffer()
-      await this.peer.setLocalDescription(offer)
-      return offer
+      console.log("[createPeer] getOffer called, signaling state:", this.peer.signalingState)
+      if (this.peer.signalingState === "closed") {
+        console.log("[createPeer] Peer connection is closed, cannot create offer")
+        return null
+      }
+      try {
+        const offer = await this.peer.createOffer()
+        console.log("[createPeer] Offer created:", offer.type)
+        await this.peer.setLocalDescription(new RTCSessionDescription(offer))
+        console.log("[createPeer] Local description set")
+        return offer
+      } catch (error) {
+        console.error("[createPeer] Error creating offer:", error)
+        return null
+      }
     },
 
     async getAnswer(offer) {
-      await this.peer.setRemoteDescription(new RTCSessionDescription(offer))
-      const answer = await this.peer.createAnswer()
-      await this.peer.setLocalDescription(answer)
-      return answer
+      console.log("[createPeer] getAnswer called, signaling state:", this.peer.signalingState)
+      if (this.peer.signalingState === "closed") {
+        console.log("[createPeer] Peer connection is closed, cannot create answer")
+        return null
+      }
+      try {
+        console.log("[createPeer] Setting remote description (offer)")
+        await this.peer.setRemoteDescription(new RTCSessionDescription(offer))
+        console.log("[createPeer] Remote description set, creating answer")
+        const answer = await this.peer.createAnswer()
+        console.log("[createPeer] Answer created:", answer.type)
+        await this.peer.setLocalDescription(new RTCSessionDescription(answer))
+        console.log("[createPeer] Local description set")
+        return answer
+      } catch (error) {
+        console.error("[createPeer] Error creating answer:", error)
+        return null
+      }
     },
 
     async setLocalDescription(ans) {
-      await this.peer.setRemoteDescription(new RTCSessionDescription(ans))
+      console.log("[createPeer] setLocalDescription called, signaling state:", this.peer.signalingState)
+      if (this.peer.signalingState === "closed") {
+        console.log("[createPeer] Peer connection is closed, cannot set remote description")
+        return
+      }
+      try {
+        console.log("[createPeer] Setting remote description (answer)")
+        await this.peer.setRemoteDescription(new RTCSessionDescription(ans))
+        console.log("[createPeer] Remote description set")
+      } catch (error) {
+        console.error("[createPeer] Error setting remote description:", error)
+      }
     },
 
     close() {
+      console.log("[createPeer] Closing peer connection")
       this.peer.close()
+      console.log("[createPeer] Peer connection closed, signaling state:", this.peer.signalingState)
     },
   }
+
+  // Add ICE candidate event listener
+  peer.peer.addEventListener("icecandidate", (event) => {
+    if (event.candidate) {
+      console.log("[createPeer] New ICE candidate:", event.candidate.candidate.substring(0, 50) + "...")
+    } else {
+      console.log("[createPeer] ICE candidate gathering complete")
+    }
+  })
+
+  // Add connection state change listener
+  peer.peer.addEventListener("connectionstatechange", () => {
+    console.log("[createPeer] Connection state changed:", peer.peer.connectionState)
+  })
+
+  // Add ICE connection state change listener
+  peer.peer.addEventListener("iceconnectionstatechange", () => {
+    console.log("[createPeer] ICE connection state changed:", peer.peer.iceConnectionState)
+  })
+
+  // Add signaling state change listener
+  peer.peer.addEventListener("signalingstatechange", () => {
+    console.log("[createPeer] Signaling state changed:", peer.peer.signalingState)
+  })
 
   return peer
 }
 
-const peer = createPeer()
-
+// Add console.log at the beginning of the component
 const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "Patient" }) => {
+  console.log(`[MeetingRoom] Initializing with slug: ${slug}, doctor: ${doctorName}`)
   const socket = useSocket()
   const [remoteSocketId, setRemoteSocketId] = useState(null)
   const [myStream, setMyStream] = useState(null)
@@ -76,6 +139,7 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
   const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState("connecting")
   const [callDuration, setCallDuration] = useState(0)
+  const [peerConnection, setPeerConnection] = useState(null)
 
   const messages = useAppSelector((state) => state.chat?.chat || [])
   const dispatch = useAppDispatch()
@@ -85,99 +149,174 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
   const durationTimerRef = useRef(null)
   const navigate = useNavigate()
 
+  // Initialize peer connection
+  useEffect(() => {
+    console.log("[MeetingRoom] Creating new peer connection")
+    const newPeer = createPeer()
+    setPeerConnection(newPeer)
+
+    return () => {
+      console.log("[MeetingRoom] Cleaning up peer connection")
+      if (newPeer) {
+        newPeer.close()
+      }
+    }
+  }, [])
+
+  // Add console logs to handleToggleAudio
   const handleToggleAudio = useCallback(() => {
+    console.log("[MeetingRoom] Toggle audio called, current muted state:", isMuted)
     if (myStream) {
       const audioTrack = myStream.getAudioTracks()[0]
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled
         setIsMuted(!audioTrack.enabled)
+        console.log("[MeetingRoom] Audio track enabled set to:", audioTrack.enabled)
 
         socket.emit("user:audio", {
           to: remoteSocketId,
           isMuted: !audioTrack.enabled,
         })
+        console.log("[MeetingRoom] Emitted user:audio event to:", remoteSocketId)
+      } else {
+        console.log("[MeetingRoom] No audio track found in stream")
       }
+    } else {
+      console.log("[MeetingRoom] No local stream available")
     }
-  }, [myStream, remoteSocketId, socket])
+  }, [myStream, remoteSocketId, socket, isMuted])
 
+  // Add console logs to handleToggleVideo
   const handleToggleVideo = useCallback(() => {
+    console.log("[MeetingRoom] Toggle video called, current video state:", isVideoOn)
     if (myStream) {
       const videoTrack = myStream.getVideoTracks()[0]
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled
         setIsVideoOn(!isVideoOn)
+        console.log("[MeetingRoom] Video track enabled set to:", videoTrack.enabled)
 
         socket.emit("user:video", {
           to: remoteSocketId,
           isVideoOn: !isVideoOn,
         })
+        console.log("[MeetingRoom] Emitted user:video event to:", remoteSocketId)
+      } else {
+        console.log("[MeetingRoom] No video track found in stream")
       }
+    } else {
+      console.log("[MeetingRoom] No local stream available")
     }
   }, [myStream, isVideoOn, remoteSocketId, socket])
 
+  // Add console logs to handleToggleScreenShare
   const handleToggleScreenShare = useCallback(async () => {
+    console.log("[MeetingRoom] Toggle screen share called, current state:", isScreenSharing)
     try {
-      if (!isScreenSharing) {
+      if (!isScreenSharing && peerConnection) {
+        console.log("[MeetingRoom] Starting screen sharing")
         const screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
           audio: true,
         })
+        console.log("[MeetingRoom] Screen share stream obtained:", screenStream.id)
 
-        if (myStream && peer.peer) {
-          const videoSender = peer.peer.getSenders().find((sender) => sender.track && sender.track.kind === "video")
+        if (myStream) {
+          const videoSender = peerConnection.peer
+            .getSenders()
+            .find((sender) => sender.track && sender.track.kind === "video")
 
           if (videoSender) {
+            console.log("[MeetingRoom] Replacing video track for screen sharing")
             videoSender.replaceTrack(screenStream.getVideoTracks()[0])
+          } else {
+            console.log("[MeetingRoom] No video sender found to replace track")
           }
 
           const newStream = new MediaStream()
           myStream.getAudioTracks().forEach((track) => newStream.addTrack(track))
           screenStream.getVideoTracks().forEach((track) => newStream.addTrack(track))
+          console.log("[MeetingRoom] Created combined stream with screen share")
 
           screenStream.getVideoTracks()[0].onended = () => {
+            console.log("[MeetingRoom] Screen share ended by browser event")
             handleStopScreenShare()
           }
 
           setMyStream(newStream)
+
+          // Update local video display
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = newStream
+            console.log("[MeetingRoom] Updated local video with screen share stream")
+          }
+
           setIsScreenSharing(true)
+        } else {
+          console.log("[MeetingRoom] No local stream available for screen sharing")
         }
       } else {
+        console.log("[MeetingRoom] Stopping screen sharing")
         handleStopScreenShare()
       }
     } catch (error) {
-      console.error("Error toggling screen share:", error)
+      console.error("[MeetingRoom] Error toggling screen share:", error)
     }
-  }, [isScreenSharing, myStream])
+  }, [isScreenSharing, myStream, peerConnection])
 
+  // Add console logs to handleStopScreenShare
   const handleStopScreenShare = useCallback(async () => {
+    console.log("[MeetingRoom] Stop screen share called")
     try {
+      if (!peerConnection) {
+        console.log("[MeetingRoom] No peer connection available")
+        return
+      }
+
+      console.log("[MeetingRoom] Getting new camera stream")
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       })
+      console.log("[MeetingRoom] New camera stream obtained:", newStream.id)
 
-      if (peer.peer) {
-        const videoSender = peer.peer.getSenders().find((sender) => sender.track && sender.track.kind === "video")
+      const videoSender = peerConnection.peer
+        .getSenders()
+        .find((sender) => sender.track && sender.track.kind === "video")
 
-        if (videoSender) {
-          videoSender.replaceTrack(newStream.getVideoTracks()[0])
-        }
+      if (videoSender) {
+        console.log("[MeetingRoom] Replacing screen share track with camera track")
+        videoSender.replaceTrack(newStream.getVideoTracks()[0])
+      } else {
+        console.log("[MeetingRoom] No video sender found to replace track")
+      }
 
-        const combinedStream = new MediaStream()
+      const combinedStream = new MediaStream()
+      if (myStream) {
         myStream.getAudioTracks().forEach((track) => {
           combinedStream.addTrack(track)
         })
-        newStream.getVideoTracks().forEach((track) => {
-          combinedStream.addTrack(track)
-        })
-
-        setMyStream(combinedStream)
-        setIsScreenSharing(false)
+        console.log("[MeetingRoom] Added audio tracks from existing stream")
       }
+
+      newStream.getVideoTracks().forEach((track) => {
+        combinedStream.addTrack(track)
+      })
+      console.log("[MeetingRoom] Added video tracks from new camera stream")
+
+      setMyStream(combinedStream)
+
+      // Update local video display
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = combinedStream
+        console.log("[MeetingRoom] Updated local video with camera stream")
+      }
+
+      setIsScreenSharing(false)
     } catch (error) {
-      console.error("Error stopping screen share:", error)
+      console.error("[MeetingRoom] Error stopping screen share:", error)
     }
-  }, [myStream])
+  }, [myStream, peerConnection])
 
   const handleToggleRemoteAudio = useCallback(() => {
     if (remoteStream) {
@@ -203,50 +342,68 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
     }
   }, [])
 
+  // Add console logs to handleEndCall
   const handleEndCall = useCallback(() => {
+    console.log("[MeetingRoom] End call called")
     if (myStream) {
-      myStream.getTracks().forEach((track) => track.stop())
+      console.log("[MeetingRoom] Stopping local media tracks")
+      myStream.getTracks().forEach((track) => {
+        track.stop()
+        console.log(`[MeetingRoom] Stopped track: ${track.kind}`)
+      })
     }
     if (remoteStream) {
-      remoteStream.getTracks().forEach((track) => track.stop())
+      console.log("[MeetingRoom] Stopping remote media tracks")
+      remoteStream.getTracks().forEach((track) => {
+        track.stop()
+        console.log(`[MeetingRoom] Stopped remote track: ${track.kind}`)
+      })
     }
 
     if (durationTimerRef.current) {
+      console.log("[MeetingRoom] Clearing duration timer")
       clearInterval(durationTimerRef.current)
     }
 
-    if (peer.peer) {
-      peer.close()
+    if (peerConnection) {
+      console.log("[MeetingRoom] Closing peer connection")
+      peerConnection.close()
     }
 
     setMyStream(null)
     setRemoteStream(null)
     setCallStarted(false)
     setCallDuration(0)
+    console.log("[MeetingRoom] Reset call state")
 
+    console.log("[MeetingRoom] Emitting call:end event to:", remoteSocketId)
     socket.emit("call:end", { to: remoteSocketId })
 
+    console.log("[MeetingRoom] Scheduling navigation to consultations")
     setTimeout(() => {
       navigate("/consultations")
     }, 1500)
-  }, [myStream, remoteStream, remoteSocketId, socket, navigate])
+  }, [myStream, remoteStream, remoteSocketId, socket, navigate, peerConnection])
 
   const handleOpenWhiteboard = useCallback(() => {
     window.open(`/meeting/whiteboard/${slug}`, "_blank", "width=1200,height=800")
   }, [slug])
 
+  // Set local video stream
   useEffect(() => {
     if (myStream && localVideoRef.current) {
       localVideoRef.current.srcObject = myStream
     }
   }, [myStream])
 
+  // Set remote video stream
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream
     }
   }, [remoteStream])
 
+  // Call duration timer
   useEffect(() => {
     if (callStarted && !durationTimerRef.current) {
       durationTimerRef.current = setInterval(() => {
@@ -275,98 +432,218 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
       .join(":")
   }
 
+  // Add console logs to handleUserJoined
   const handleUserJoined = useCallback(({ email, id }) => {
+    console.log(`[MeetingRoom] User joined: ${id}, email: ${email}`)
     setRemoteSocketId(id)
     setConnectionStatus("connected")
   }, [])
 
+  // Add console logs to handleCallUser
   const handleCallUser = useCallback(async () => {
+    console.log("[MeetingRoom] Call user called, remote socket ID:", remoteSocketId)
+    if (!peerConnection) {
+      console.log("[MeetingRoom] No peer connection available")
+      return
+    }
+
     try {
       setCallStarted(true)
       setConnectionStatus("connecting")
+      console.log("[MeetingRoom] Set call status to connecting")
 
+      console.log("[MeetingRoom] Requesting user media")
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       })
+      console.log("[MeetingRoom] User media obtained:", stream.id)
 
-      const offer = await peer.getOffer()
-      socket.emit("user:call", { to: remoteSocketId, offer })
       setMyStream(stream)
+      console.log("[MeetingRoom] Set local stream")
+
+      // Add tracks to peer connection
+      stream.getTracks().forEach((track) => {
+        console.log(`[MeetingRoom] Adding ${track.kind} track to peer connection`)
+        peerConnection.peer.addTrack(track, stream)
+      })
+
+      console.log("[MeetingRoom] Creating offer")
+      const offer = await peerConnection.getOffer()
+      if (offer) {
+        console.log("[MeetingRoom] Offer created, sending to remote peer:", remoteSocketId)
+        socket.emit("user:call", { to: remoteSocketId, offer })
+      } else {
+        console.log("[MeetingRoom] Failed to create offer")
+      }
     } catch (error) {
-      console.error("Error accessing media devices:", error)
+      console.error("[MeetingRoom] Error accessing media devices:", error)
       setConnectionStatus("disconnected")
     }
-  }, [remoteSocketId, socket])
+  }, [remoteSocketId, socket, peerConnection])
 
+  // Add console logs to handleIncommingCall
   const handleIncommingCall = useCallback(
     async ({ from, offer }) => {
+      console.log(`[MeetingRoom] Incoming call from: ${from}`)
+      if (!peerConnection) {
+        console.log("[MeetingRoom] No peer connection available")
+        return
+      }
+
       try {
         setRemoteSocketId(from)
         setConnectionStatus("connecting")
+        console.log("[MeetingRoom] Set connection status to connecting")
 
+        console.log("[MeetingRoom] Requesting user media for incoming call")
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
         })
+        console.log("[MeetingRoom] User media obtained:", stream.id)
 
         setMyStream(stream)
+        console.log("[MeetingRoom] Set local stream")
 
-        const ans = await peer.getAnswer(offer)
-        socket.emit("call:accepted", { to: from, ans })
+        // Add tracks to peer connection
+        stream.getTracks().forEach((track) => {
+          console.log(`[MeetingRoom] Adding ${track.kind} track to peer connection`)
+          peerConnection.peer.addTrack(track, stream)
+        })
+
+        console.log("[MeetingRoom] Creating answer for offer")
+        const ans = await peerConnection.getAnswer(offer)
+        if (ans) {
+          console.log("[MeetingRoom] Answer created, sending to caller:", from)
+          socket.emit("call:accepted", { to: from, ans })
+        } else {
+          console.log("[MeetingRoom] Failed to create answer")
+        }
 
         setCallStarted(true)
+        console.log("[MeetingRoom] Call started")
       } catch (error) {
-        console.error("Error handling incoming call:", error)
+        console.error("[MeetingRoom] Error handling incoming call:", error)
         setConnectionStatus("disconnected")
       }
     },
-    [socket],
+    [socket, peerConnection],
   )
 
-  const sendStreams = useCallback(() => {
-    if (myStream) {
-      for (const track of myStream.getTracks()) {
-        peer.peer.addTrack(track, myStream)
-      }
-    }
-  }, [myStream])
-
+  // Add console logs to handleCallAccepted
   const handleCallAccepted = useCallback(
     ({ from, ans }) => {
-      peer.setLocalDescription(ans)
-      sendStreams()
+      console.log(`[MeetingRoom] Call accepted from: ${from}`)
+      if (!peerConnection) {
+        console.log("[MeetingRoom] No peer connection available")
+        return
+      }
+
+      console.log("[MeetingRoom] Setting remote description (answer)")
+      peerConnection.setLocalDescription(ans)
       setConnectionStatus("connected")
+      console.log("[MeetingRoom] Connection status set to connected")
     },
-    [sendStreams],
+    [peerConnection],
   )
 
   const handleNegoNeeded = useCallback(async () => {
-    const offer = await peer.getOffer()
-    socket.emit("peer:nego:needed", { offer, to: remoteSocketId })
-  }, [remoteSocketId, socket])
-
-  useEffect(() => {
-    peer.peer.addEventListener("negotiationneeded", handleNegoNeeded)
-    return () => {
-      peer.peer.removeEventListener("negotiationneeded", handleNegoNeeded)
+    console.log("[MeetingRoom] Negotiation needed")
+    if (!peerConnection || !remoteSocketId) {
+      console.log("[MeetingRoom] No peer connection or remote socket ID available")
+      return
     }
-  }, [handleNegoNeeded])
 
+    try {
+      console.log("[MeetingRoom] Creating offer for negotiation")
+      const offer = await peerConnection.getOffer()
+      if (offer) {
+        console.log("[MeetingRoom] Offer created, sending negotiation to:", remoteSocketId)
+        socket.emit("peer:nego:needed", { offer, to: remoteSocketId })
+      } else {
+        console.log("[MeetingRoom] Failed to create offer for negotiation")
+      }
+    } catch (error) {
+      console.error("[MeetingRoom] Error in negotiation:", error)
+    }
+  }, [remoteSocketId, socket, peerConnection])
+
+  // Set up negotiation needed event listener
+  useEffect(() => {
+    if (!peerConnection) {
+      console.log("[MeetingRoom] No peer connection available for negotiation listener")
+      return
+    }
+
+    const handleNegotiationNeeded = () => {
+      console.log("[MeetingRoom] Negotiation needed event triggered")
+      handleNegoNeeded()
+    }
+
+    console.log("[MeetingRoom] Adding negotiationneeded event listener")
+    peerConnection.peer.addEventListener("negotiationneeded", handleNegotiationNeeded)
+
+    return () => {
+      console.log("[MeetingRoom] Removing negotiationneeded event listener")
+      peerConnection.peer.removeEventListener("negotiationneeded", handleNegotiationNeeded)
+    }
+  }, [peerConnection, handleNegoNeeded])
+
+  // Add console logs to handleNegoNeedIncomming
   const handleNegoNeedIncomming = useCallback(
     async ({ from, offer }) => {
-      const ans = await peer.getAnswer(offer)
-      socket.emit("peer:nego:done", { to: from, ans })
+      console.log(`[MeetingRoom] Incoming negotiation from: ${from}`)
+      if (!peerConnection) {
+        console.log("[MeetingRoom] No peer connection available")
+        return
+      }
+
+      try {
+        console.log("[MeetingRoom] Creating answer for negotiation")
+        const ans = await peerConnection.getAnswer(offer)
+        if (ans) {
+          console.log("[MeetingRoom] Answer created, sending negotiation done to:", from)
+          socket.emit("peer:nego:done", { to: from, ans })
+        } else {
+          console.log("[MeetingRoom] Failed to create answer for negotiation")
+        }
+      } catch (error) {
+        console.error("[MeetingRoom] Error handling incoming negotiation:", error)
+      }
     },
-    [socket],
+    [socket, peerConnection],
   )
 
-  const handleNegoNeedFinal = useCallback(async ({ ans }) => {
-    await peer.setLocalDescription(ans)
+  // Add console logs to handleNegoNeedFinal
+  const handleNegoNeedFinal = useCallback(
+    async ({ ans }) => {
+      console.log("[MeetingRoom] Final negotiation step")
+      if (!peerConnection) {
+        console.log("[MeetingRoom] No peer connection available")
+        return
+      }
+
+      try {
+        console.log("[MeetingRoom] Setting remote description (final negotiation)")
+        await peerConnection.setLocalDescription(ans)
+        console.log("[MeetingRoom] Remote description set successfully")
+      } catch (error) {
+        console.error("[MeetingRoom] Error finalizing negotiation:", error)
+      }
+    },
+    [peerConnection],
+  )
+
+  const handleRemoteAudioChange = useCallback(({ isMuted }) => {
+    // Handle remote audio change notification
+    console.log("Remote audio changed:", isMuted)
   }, [])
 
-  const handleRemoteAudioChange = useCallback(({ isMuted }) => {}, [])
-  const handleRemoteVideoChange = useCallback(({ isVideoOn }) => {}, [])
+  const handleRemoteVideoChange = useCallback(({ isVideoOn }) => {
+    // Handle remote video change notification
+    console.log("Remote video changed:", isVideoOn)
+  }, [])
 
   const handleCallEnded = useCallback(() => {
     if (myStream) {
@@ -380,6 +657,10 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
       clearInterval(durationTimerRef.current)
     }
 
+    if (peerConnection) {
+      peerConnection.close()
+    }
+
     setMyStream(null)
     setRemoteStream(null)
     setCallStarted(false)
@@ -389,50 +670,107 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
     setTimeout(() => {
       navigate("/consultations")
     }, 1500)
-  }, [myStream, remoteStream, navigate])
+  }, [myStream, remoteStream, navigate, peerConnection])
 
+  // Add console logs to track event listener
   useEffect(() => {
-    const handleTrack = (ev) => {
-      const remoteStream = ev.streams[0]
-      setRemoteStream(remoteStream)
+    if (!peerConnection) {
+      console.log("[MeetingRoom] No peer connection available for track listener")
+      return
+    }
 
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream
+    const handleTrack = (ev) => {
+      console.log("[MeetingRoom] Received remote track event:", ev.track?.kind)
+      console.log("[MeetingRoom] Remote streams:", ev.streams?.length)
+      if (ev.streams && ev.streams[0]) {
+        console.log("[MeetingRoom] Setting remote stream:", ev.streams[0].id)
+        setRemoteStream(ev.streams[0])
+      } else {
+        console.log("[MeetingRoom] No streams in track event")
       }
     }
 
-    peer.peer.addEventListener("track", handleTrack)
-    return () => {
-      peer.peer.removeEventListener("track", handleTrack)
-    }
-  }, [])
+    console.log("[MeetingRoom] Adding track event listener")
+    peerConnection.peer.addEventListener("track", handleTrack)
 
+    return () => {
+      console.log("[MeetingRoom] Removing track event listener")
+      peerConnection.peer.removeEventListener("track", handleTrack)
+    }
+  }, [peerConnection])
+
+  // Set up socket event listeners
   useEffect(() => {
-    socket.on("user:joined", handleUserJoined)
-    socket.on("incomming:call", handleIncommingCall)
-    socket.on("call:accepted", handleCallAccepted)
-    socket.on("peer:nego:needed", handleNegoNeedIncomming)
-    socket.on("peer:nego:final", handleNegoNeedFinal)
-    socket.on("user:audio", handleRemoteAudioChange)
-    socket.on("user:video", handleRemoteVideoChange)
-    socket.on("call:end", handleCallEnded)
+    if (!socket) {
+      console.log("[MeetingRoom] No socket available")
+      return
+    }
+
+    // Join the room when component mounts
+    console.log(`[MeetingRoom] Joining room: ${slug}`)
+    socket.emit("room:join", { email: "User", slug })
+
+    console.log("[MeetingRoom] Setting up socket event listeners")
+    socket.on("user:joined", (data) => {
+      console.log("[MeetingRoom] Socket event: user:joined", data)
+      handleUserJoined(data)
+    })
+
+    socket.on("incomming:call", (data) => {
+      console.log("[MeetingRoom] Socket event: incomming:call", data.from)
+      handleIncommingCall(data)
+    })
+
+    socket.on("call:accepted", (data) => {
+      console.log("[MeetingRoom] Socket event: call:accepted", data.from)
+      handleCallAccepted(data)
+    })
+
+    socket.on("peer:nego:needed", (data) => {
+      console.log("[MeetingRoom] Socket event: peer:nego:needed", data.from)
+      handleNegoNeedIncomming(data)
+    })
+
+    socket.on("peer:nego:final", (data) => {
+      console.log("[MeetingRoom] Socket event: peer:nego:final")
+      handleNegoNeedFinal(data)
+    })
+
+    socket.on("user:audio", (data) => {
+      console.log("[MeetingRoom] Socket event: user:audio", data)
+      handleRemoteAudioChange(data)
+    })
+
+    socket.on("user:video", (data) => {
+      console.log("[MeetingRoom] Socket event: user:video", data)
+      handleRemoteVideoChange(data)
+    })
+
+    socket.on("call:end", () => {
+      console.log("[MeetingRoom] Socket event: call:end")
+      handleCallEnded()
+    })
+
     socket.on("chat:message", (message) => {
+      console.log("[MeetingRoom] Socket event: chat:message", message.id)
       dispatch(addMessage(message))
     })
 
     return () => {
-      socket.off("user:joined", handleUserJoined)
-      socket.off("incomming:call", handleIncommingCall)
-      socket.off("call:accepted", handleCallAccepted)
-      socket.off("peer:nego:needed", handleNegoNeedIncomming)
-      socket.off("peer:nego:final", handleNegoNeedFinal)
-      socket.off("user:audio", handleRemoteAudioChange)
-      socket.off("user:video", handleRemoteVideoChange)
-      socket.off("call:end", handleCallEnded)
+      console.log("[MeetingRoom] Cleaning up socket event listeners")
+      socket.off("user:joined")
+      socket.off("incomming:call")
+      socket.off("call:accepted")
+      socket.off("peer:nego:needed")
+      socket.off("peer:nego:final")
+      socket.off("user:audio")
+      socket.off("user:video")
+      socket.off("call:end")
       socket.off("chat:message")
     }
   }, [
     socket,
+    slug,
     handleUserJoined,
     handleIncommingCall,
     handleCallAccepted,
@@ -443,6 +781,29 @@ const MeetingRoom = ({ slug, doctorName = "Tanamy Shingde", doctorSpecialty = "P
     handleCallEnded,
     dispatch,
   ])
+
+  // Add console logs to cleanup effect
+  useEffect(() => {
+    return () => {
+      console.log("[MeetingRoom] Component unmounting, cleaning up resources")
+      if (myStream) {
+        console.log("[MeetingRoom] Stopping local media tracks")
+        myStream.getTracks().forEach((track) => track.stop())
+      }
+      if (remoteStream) {
+        console.log("[MeetingRoom] Stopping remote media tracks")
+        remoteStream.getTracks().forEach((track) => track.stop())
+      }
+      if (durationTimerRef.current) {
+        console.log("[MeetingRoom] Clearing duration timer")
+        clearInterval(durationTimerRef.current)
+      }
+      if (peerConnection) {
+        console.log("[MeetingRoom] Closing peer connection")
+        peerConnection.close()
+      }
+    }
+  }, [myStream, remoteStream, peerConnection])
 
   return (
     <div className="w-full h-screen relative bg-gray-100" ref={containerRef}>
