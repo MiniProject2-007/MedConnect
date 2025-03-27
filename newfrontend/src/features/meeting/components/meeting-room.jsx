@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ const MeetingRoom = ({ slug }) => {
         setRemoteStream(null);
         setCallStarted(false);
         socket.emit("call:end", { to: remoteSocketId });
-        navigate("/"); // Or wherever you want to redirect after call ends
+        navigate("/dashboard"); // Or wherever you want to redirect after call ends
     }, [myStream, remoteStream, remoteSocketId, socket, navigate]);
 
     // Update video refs when streams change
@@ -84,7 +85,7 @@ const MeetingRoom = ({ slug }) => {
     }, [remoteStream]);
 
     const handleUserJoined = useCallback(({ email, id }) => {
-        console.log(`Email ${email} joined room`);      
+        console.log(`Email ${email} joined room`);
         setRemoteSocketId(id);
     }, []);
 
@@ -224,78 +225,125 @@ const MeetingRoom = ({ slug }) => {
                 autoPlay
             />
             {!remoteSocketId ? (
-                <div className="w-full h-full flex flex-col items-center justify-center ">
-                    <Loader2 className="w-12 h-12 animate-spin " />
-                    <p className="mt-4 text-lg ">
-                        Waiting for participant...
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50">
+                    <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                    <p className="mt-4 text-lg font-medium">
+                        Waiting for participant to join...
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        Share the meeting link to invite someone
                     </p>
                 </div>
             ) : remoteSocketId && !callStarted ? (
-                <div className="w-full h-full flex flex-col items-center justify-center ">
-                    <button
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50">
+                    <div className="text-center mb-6">
+                        <h2 className="text-xl font-bold">Ready to join?</h2>
+                        <p className="text-muted-foreground">
+                            Participant is waiting for you
+                        </p>
+                    </div>
+                    <Button
                         onClick={handleCallUser}
-                        className="px-4 py-2 rounded-lg"
+                        className="px-6 py-2 rounded-full bg-primary hover:bg-primary/90 text-white"
                     >
                         Start Call
-                    </button>
+                    </Button>
                 </div>
             ) : (
                 <>
-                    <div className="absolute right-4 bottom-20 h-48 w-64  rounded-lg">
+                    <div className="absolute right-4 bottom-20 h-48 w-64 rounded-lg overflow-hidden border-2 border-white shadow-lg">
                         <video
-                            className="h-48 rounded-lg"
+                            className="h-full w-full object-cover rounded-lg"
                             playsInline
                             autoPlay
                             ref={localVideoRef}
                             muted
                         />
+                        <div className="absolute bottom-2 left-2 flex gap-2">
+                            {isMuted && (
+                                <div className="bg-red-500 rounded-full p-1">
+                                    <MicOff className="w-3 h-3 text-white" />
+                                </div>
+                            )}
+                            {!isVideoOn && (
+                                <div className="bg-red-500 rounded-full p-1">
+                                    <VideoOff className="w-3 h-3 text-white" />
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <Card className="absolute bottom-0 left-0 w-full">
                         <CardContent className="p-4">
                             <div className="flex flex-wrap justify-center gap-4">
+                                <div className="relative group">
+                                    <Button
+                                        variant={
+                                            isMuted ? "destructive" : "outline"
+                                        }
+                                        size="icon"
+                                        className={`rounded-full w-10 h-10 ${
+                                            isMuted
+                                                ? ""
+                                                : "border-[] hover:bg-gray-100"
+                                        }`}
+                                        onClick={handleToggleAudio}
+                                    >
+                                        {isMuted ? (
+                                            <MicOff className="w-5 h-5" />
+                                        ) : (
+                                            <Mic className="w-5 h-5" />
+                                        )}
+                                    </Button>
+                                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {isMuted ? "Unmute" : "Mute"}
+                                    </div>
+                                </div>
+                                <div className="relative group">
+                                    <Button
+                                        variant={
+                                            isVideoOn
+                                                ? "outline"
+                                                : "destructive"
+                                        }
+                                        size="icon"
+                                        className={`rounded-full w-10 h-10 ${
+                                            isVideoOn
+                                                ? "border-[] hover:bg-gray-100"
+                                                : ""
+                                        }`}
+                                        onClick={handleToggleVideo}
+                                    >
+                                        {isVideoOn ? (
+                                            <Video className="w-5 h-5" />
+                                        ) : (
+                                            <VideoOff className="w-5 h-5" />
+                                        )}
+                                    </Button>
+                                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {isVideoOn
+                                            ? "Turn off camera"
+                                            : "Turn on camera"}
+                                    </div>
+                                </div>
                                 <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-[]  hover:bg-gray-100"
-                                    onClick={handleToggleAudio}
-                                >
-                                    {isMuted ? (
-                                        <MicOff className="w-4 h-4" />
-                                    ) : (
-                                        <Mic className="w-4 h-4" />
-                                    )}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-[]  hover:bg-gray-100"
-                                    onClick={handleToggleVideo}
-                                >
-                                    {isVideoOn ? (
-                                        <Video className="w-4 h-4" />
-                                    ) : (
-                                        <VideoOff className="w-4 h-4" />
-                                    )}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-red-500 hover:bg-red-600 text-red-500"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="rounded-full w-10 h-10"
                                     onClick={handleEndCall}
                                 >
-                                    <Phone className="w-4 h-4" />
+                                    <Phone className="w-5 h-5 rotate-135" />
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    size="sm"
-                                    className="border-[]  hover:bg-gray-100"
+                                    size="icon"
+                                    className="rounded-full w-10 h-10 border-[] hover:bg-gray-100"
                                     onClick={() => {
                                         window.open(
                                             `/meeting/whiteboard/${slug}`
                                         );
                                     }}
                                 >
-                                    <Presentation className="w-4 h-4" />
+                                    <Presentation className="w-5 h-5" />
                                 </Button>
                                 <Sheet
                                     open={isSheetOpen}
@@ -318,6 +366,12 @@ const MeetingRoom = ({ slug }) => {
                         </CardContent>
                     </Card>
                 </>
+            )}
+            {callStarted && (
+                <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    Connected
+                </div>
             )}
         </div>
     );
