@@ -26,6 +26,7 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/vite": "^4.0.13",
+    "@tldraw/sync": "^3.11.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
@@ -42,7 +43,8 @@
     "sonner": "^2.0.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.13",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "tldraw": "^3.11.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

@@ -10,6 +10,7 @@ import MyConsultationsPage from "./features/appointment/pages/my-consultations-p
 import { Toaster } from "sonner";
 import JoinMeetingPage from "./features/meeting/pages/join-meeting-page";
 import MeetingRoomPage from "./features/meeting/pages/meetin-room-page";
+import WhiteboardPage from "./features/meeting/pages/whiteboard-page";
 
 export default function App() {
     const { isSignedIn } = useAuth();
@@ -44,6 +45,7 @@ export default function App() {
                 )}
 
                 <Route path="/meeting/room/:id" element={<MeetingRoomPage />} />
+                <Route path="/meeting/whiteboard/:id" element={<WhiteboardPage />} />
             </Routes>
             <Toaster />
         </div>
