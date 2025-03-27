@@ -53,10 +53,10 @@ const MeetingRoom = ({ slug }) => {
             const videoTrack = myStream.getVideoTracks()[0];
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
-                setIsVideoOn(!isVideoOn);
+                setIsVideoOn(videoTrack.enabled);
             }
         }
-    }, [myStream, isVideoOn]);
+    }, [myStream]);
 
     const handleEndCall = useCallback(() => {
         if (myStream) {
@@ -70,7 +70,7 @@ const MeetingRoom = ({ slug }) => {
         setRemoteStream(null);
         setCallStarted(false);
         socket.emit("call:end", { to: remoteSocketId });
-        navigate("/dashboard"); // Or wherever you want to redirect after call ends
+        navigate("/dashboard");
     }, [myStream, remoteStream, remoteSocketId, socket, navigate]);
 
     // Update video refs when streams change
@@ -116,7 +116,7 @@ const MeetingRoom = ({ slug }) => {
                     video: true,
                 });
                 setMyStream(stream);
-                console.log(`Incoming Call`, from, offer);
+                console.log("Incoming Call", from, offer);
                 const ans = await peer.getAnswer(offer);
                 socket.emit("call:accepted", { to: from, ans });
             } catch (error) {
@@ -150,50 +150,66 @@ const MeetingRoom = ({ slug }) => {
 
     const handleScreenShare = useCallback(async () => {
         try {
-            if(isScreenSharing){
-                setIsScreenSharing(false);
+            if (isScreenSharing) {
+                // Switching back to camera if already sharing screen
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: true,
                     video: true,
                 });
                 const videoTrack = stream.getVideoTracks()[0];
-                const sender = peer.peer.getSenders().find((s) => {
-                    return s.track.kind === videoTrack.kind;
-                });
+                const sender = peer.peer
+                    .getSenders()
+                    .find((s) => s.track.kind === "video");
                 if (sender) {
                     sender.replaceTrack(videoTrack);
                 } else {
                     peer.peer.addTrack(videoTrack, stream);
                 }
-            }else{
+                setIsScreenSharing(false);
+            } else {
+                // Start screen sharing
                 const stream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
                     audio: true,
                 });
                 const screenTrack = stream.getVideoTracks()[0];
-                const sender = peer.peer.getSenders().find((s) => {
-                    return s.track.kind === screenTrack.kind;
-                });
+                const sender = peer.peer
+                    .getSenders()
+                    .find((s) => s.track.kind === "video");
                 if (sender) {
                     sender.replaceTrack(screenTrack);
                 } else {
                     peer.peer.addTrack(screenTrack, stream);
                 }
+                // If the user stops sharing via browser controls,
+                // automatically switch back to the camera.
+                screenTrack.onended = async () => {
+                    try {
+                        const camStream =
+                            await navigator.mediaDevices.getUserMedia({
+                                audio: true,
+                                video: true,
+                            });
+                        const videoTrack = camStream.getVideoTracks()[0];
+                        const sender = peer.peer
+                            .getSenders()
+                            .find((s) => s.track.kind === "video");
+                        if (sender) {
+                            sender.replaceTrack(videoTrack);
+                        } else {
+                            peer.peer.addTrack(videoTrack, camStream);
+                        }
+                        setIsScreenSharing(false);
+                    } catch (error) {
+                        console.error("Error reverting to camera:", error);
+                    }
+                };
                 setIsScreenSharing(true);
             }
         } catch (error) {
             console.error("Error sharing screen:", error);
         }
-    }, []);
-    useEffect(() => {
-        peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
-        return () => {
-            peer.peer.removeEventListener(
-                "negotiationneeded",
-                handleNegoNeeded
-            );
-        };
-    }, [handleNegoNeeded]);
+    }, [isScreenSharing]);
 
     const handleNegoNeedIncomming = useCallback(
         async ({ from, offer }) => {
@@ -385,7 +401,11 @@ const MeetingRoom = ({ slug }) => {
                                     <Presentation className="w-5 h-5" />
                                 </Button>
                                 <Button
-                                    variant="outline"
+                                    variant={
+                                        isScreenSharing
+                                            ? "destructive"
+                                            : "outline"
+                                    }
                                     size="icon"
                                     className="rounded-full w-10 h-10 border-[] hover:bg-gray-100"
                                     onClick={handleScreenShare}
