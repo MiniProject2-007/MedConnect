@@ -17,6 +17,7 @@ import Sidebar from "@/components/sidebar";
 import { toast } from "sonner";
 import { useDashboard } from "./dashboard-provider";
 import { UserButton } from "@clerk/clerk-react";
+import Chatbot from "./chatbot";
 
 export function DashboardLayout({ children }) {
     const { sidebarOpen, toggleSidebar, currentUser } = useDashboard();
@@ -39,6 +40,7 @@ export function DashboardLayout({ children }) {
     return (
         <div className="h-screen flex flex-1">
             <Sidebar pathname={location.pathname} />
+            <Chatbot />
             <div className="h-screen overflow-auto w-full">
                 <header className="sticky top-0 z-40 flex h-16 items-center border-b bg-background/95 px-4 backdrop-blur-sm sm:px-6">
                     <Button
@@ -50,23 +52,6 @@ export function DashboardLayout({ children }) {
                         <Menu className="h-5 w-5" />
                         <span className="sr-only">Toggle Menu</span>
                     </Button>
-
-                    {/* <div
-                        className={`relative hidden transition-all duration-200 md:block ${
-                            searchFocused
-                                ? "w-[280px] lg:w-[320px]"
-                                : "w-[200px] lg:w-[240px]"
-                        }`}
-                    >
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search..."
-                            className="pl-9 pr-4 h-9 rounded-full"
-                            onFocus={() => setSearchFocused(true)}
-                            onBlur={() => setSearchFocused(false)}
-                        />
-                    </div> */}
 
                     <div className="ml-auto flex items-center gap-2">
                         <Button

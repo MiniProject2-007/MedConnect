@@ -1,0 +1,202 @@
+[
+    {
+        "question": "Hi",
+        "answer": "Hello! How can I assist you today?"
+    },
+    {
+        "question": "Hello",
+        "answer": "Hi there! How's your day going?"
+    },
+    {
+        "question": "Good morning",
+        "answer": "Good morning! Hope you have a great day ahead."
+    },
+    {
+        "question": "Good afternoon",
+        "answer": "Good afternoon! How can I help you today?"
+    },
+    {
+        "question": "Good evening",
+        "answer": "Good evening! How was your day?"
+    },
+    {
+        "question": "Good night",
+        "answer": "Good night! Sleep well and take care."
+    },
+    {
+        "question": "How are you?",
+        "answer": "I'm just a bot, but I'm always here to help! How about you?"
+    },
+    {
+        "question": "What's your name?",
+        "answer": "I'm your friendly chatbot, here to assist you!"
+    },
+    {
+        "question": "Thank you",
+        "answer": "You're welcome! Let me know if you need anything else."
+    },
+    {
+        "question": "Bye",
+        "answer": "Goodbye! Have a great day!"
+    },
+    {
+        "question": "What is a balanced diet?",
+        "answer": "A balanced diet includes proteins, carbohydrates, fats, vitamins, and minerals in appropriate proportions."
+    },
+    {
+        "question": "How much water should I drink daily?",
+        "answer": "It is recommended to drink at least 8 glasses (2 liters) of water per day."
+    },
+    {
+        "question": "How often should I exercise?",
+        "answer": "At least 30 minutes of moderate exercise 5 times a week."
+    },
+    {
+        "question": "What is BMI, and how is it calculated?",
+        "answer": "BMI (Body Mass Index) is calculated as weight (kg) / height² (m²)."
+    },
+    {
+        "question": "How much sleep do I need daily?",
+        "answer": "Adults need 7-9 hours of sleep per night."
+    },
+    {
+        "question": "What are the common symptoms of diabetes?",
+        "answer": "Frequent urination, excessive thirst, weight loss, and fatigue."
+    },
+    {
+        "question": "How do I know if I have a fever?",
+        "answer": "A temperature above 100.4°F (38°C) is considered a fever."
+    },
+    {
+        "question": "What are the signs of a heart attack?",
+        "answer": "Chest pain, shortness of breath, nausea, dizziness, and discomfort in the arms or shoulders."
+    },
+    {
+        "question": "What are the symptoms of high blood pressure?",
+        "answer": "Often, high blood pressure has no symptoms, but severe cases can cause headaches, dizziness, or nosebleeds."
+    },
+    {
+        "question": "What are the early signs of cancer?",
+        "answer": "Unexplained weight loss, persistent fatigue, lumps, changes in skin, and unusual bleeding."
+    },
+    {
+        "question": "Can I take antibiotics for a viral infection?",
+        "answer": "No, antibiotics only work against bacterial infections, not viruses."
+    },
+    {
+        "question": "What are the side effects of painkillers?",
+        "answer": "Common side effects include nausea, dizziness, and stomach irritation."
+    },
+    {
+        "question": "How long should I take antibiotics?",
+        "answer": "Always complete the full prescribed course, even if you feel better."
+    },
+    {
+        "question": "What is the difference between paracetamol and ibuprofen?",
+        "answer": "Paracetamol is for fever and mild pain, while ibuprofen is an anti-inflammatory for pain and swelling."
+    },
+    {
+        "question": "Can I take medicine on an empty stomach?",
+        "answer": "Some medications should be taken with food to avoid stomach irritation; always check the label."
+    },
+    {
+        "question": "How do I treat a minor burn?",
+        "answer": "Run cool water over the burn for 10-15 minutes and apply aloe vera or a burn ointment."
+    },
+    {
+        "question": "What should I do if someone faints?",
+        "answer": "Lay them down, elevate their legs, and ensure fresh air. If they don’t wake up, call for medical help."
+    },
+    {
+        "question": "How do I perform CPR?",
+        "answer": "Give 30 chest compressions followed by 2 rescue breaths. Repeat until medical help arrives."
+    },
+    {
+        "question": "What should I do if I get a deep cut?",
+        "answer": "Apply pressure to stop bleeding, clean with antiseptic, and cover with a bandage."
+    },
+    {
+        "question": "How do I stop a nosebleed?",
+        "answer": "Pinch your nose and lean forward, applying pressure for 5-10 minutes."
+    },
+    {
+        "question": "How does COVID-19 spread?",
+        "answer": "Through respiratory droplets when an infected person coughs, sneezes, or talks."
+    },
+    {
+        "question": "What are the symptoms of the flu?",
+        "answer": "Fever, cough, sore throat, muscle aches, fatigue, and runny nose."
+    },
+    {
+        "question": "How do I prevent catching a cold?",
+        "answer": "Wash hands frequently, avoid touching your face, and maintain good hygiene."
+    },
+    {
+        "question": "What are the symptoms of tuberculosis (TB)?",
+        "answer": "Persistent cough, weight loss, night sweats, and fever."
+    },
+    {
+        "question": "How is malaria transmitted?",
+        "answer": "Through the bite of an infected mosquito."
+    },
+    {
+        "question": "How often should I take my child for a health checkup?",
+        "answer": "Once a year for routine checkups, more often for infants."
+    },
+    {
+        "question": "What are the signs of dehydration in children?",
+        "answer": "Dry mouth, no tears when crying, sunken eyes, and reduced urination."
+    },
+    {
+        "question": "What should I do if my child has a fever?",
+        "answer": "Give fluids, dress them lightly, and use fever-reducing medication if needed."
+    },
+    {
+        "question": "What is the normal body temperature for children?",
+        "answer": "97.9°F to 99°F (36.6°C to 37.2°C)."
+    },
+    {
+        "question": "How can I prevent diaper rash?",
+        "answer": "Keep the diaper area dry, change diapers frequently, and use a barrier cream."
+    },
+    {
+        "question": "How do I treat acne?",
+        "answer": "Use gentle cleansers, avoid excessive touching, and apply benzoyl peroxide or salicylic acid."
+    },
+    {
+        "question": "What causes eczema?",
+        "answer": "Genetics, allergens, stress, and dry skin."
+    },
+    {
+        "question": "How can I prevent sunburn?",
+        "answer": "Apply sunscreen (SPF 30+), wear protective clothing, and avoid direct sunlight from 10 AM to 4 PM."
+    },
+    {
+        "question": "What are the symptoms of a food allergy?",
+        "answer": "Hives, swelling, difficulty breathing, nausea, or vomiting."
+    },
+    {
+        "question": "How do I treat insect bites?",
+        "answer": "Wash the area, apply ice to reduce swelling, and use anti-itch cream."
+    },
+    {
+        "question": "What are the symptoms of depression?",
+        "answer": "Persistent sadness, loss of interest, sleep disturbances, and feelings of hopelessness."
+    },
+    {
+        "question": "How can I reduce stress?",
+        "answer": "Exercise, practice meditation, get enough sleep, and manage your time effectively."
+    },
+    {
+        "question": "What are panic attacks?",
+        "answer": "Sudden episodes of intense fear, rapid heartbeat, sweating, and difficulty breathing."
+    },
+    {
+        "question": "How do I improve my sleep quality?",
+        "answer": "Maintain a consistent sleep schedule, avoid caffeine before bed, and reduce screen time."
+    },
+    {
+        "question": "When should I seek professional help for anxiety?",
+        "answer": "If anxiety interferes with daily life, work, or relationships, consult a therapist."
+    }
+]
