@@ -3,4 +3,3 @@ uvicorn
 chromadb
 together
 jsonschema
-fastapi-cors-middleware

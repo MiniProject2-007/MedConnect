@@ -53,6 +53,9 @@ def refine_answer(query, initial_answer):
         print("Error refining answer:", e)
         return initial_answer
 
+@app.get("/")
+def root():
+    return {"message": "Welcome to the Medical FAQ Chatbot!"}
 
 @app.get("/search")
 def search_faq(query: str):
