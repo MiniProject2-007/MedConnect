@@ -12,6 +12,7 @@ import JoinMeetingPage from "./features/meeting/pages/join-meeting-page";
 import MeetingRoomPage from "./features/meeting/pages/meetin-room-page";
 import WhiteboardPage from "./features/meeting/pages/whiteboard-page";
 import DoctorSigninPage from "./features/auth/pages/doctor-signin-page";
+import AppointmentDetailPage from "./features/appointment/pages/appointment-detail-page";
 
 export default function App() {
     const { isSignedIn } = useAuth();
@@ -41,6 +42,10 @@ export default function App() {
                         <Route
                             path="meeting/join/:id"
                             element={<JoinMeetingPage />}
+                        />
+                        <Route
+                            path="appointment/:id"
+                            element={<AppointmentDetailPage/>}
                         />
                     </Route>
                 )}

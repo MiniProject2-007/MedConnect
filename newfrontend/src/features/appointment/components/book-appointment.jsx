@@ -29,7 +29,7 @@ import {
     Loader2,
 } from "lucide-react";
 import { format, addMonths, isBefore, startOfDay, isAfter } from "date-fns";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
 export default function BookAppointment() {
@@ -47,6 +47,7 @@ export default function BookAppointment() {
     const [error, setError] = useState(null);
 
     const { userId, getToken } = useAuth();
+    const { user } = useUser();
     useEffect(() => {
         const fetchAvailableSlots = async () => {
             if (!date) return;
@@ -123,6 +124,7 @@ export default function BookAppointment() {
                         timeSlot,
                         reason,
                         appointmentType,
+                        user: user,
                     }),
                 }
             );

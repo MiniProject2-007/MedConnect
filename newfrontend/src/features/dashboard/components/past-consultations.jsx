@@ -19,6 +19,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
+import { useNavigate } from "react-router";
 
 export function PastConsultations() {
     const [pastConsultations, setPastConsultations] = useState([]);
@@ -26,6 +27,8 @@ export function PastConsultations() {
     const [error, setError] = useState(null);
     const { getToken, userId } = useAuth();
     const doctorToken = localStorage.getItem("doctorToken");
+
+    const navigate = useNavigate();
 
     const getPastAppointments = async () => {
         const today = format(new Date(), "yyyy-MM-dd");
@@ -186,21 +189,15 @@ export function PastConsultations() {
                                         variant="outline"
                                         size="sm"
                                         className="h-8 gap-1 px-3"
+                                        onClick={() => {
+                                            navigate(
+                                                `/dashboard/appointment/${consultation._id}`
+                                            );
+                                        }}
                                     >
                                         <FileCheck className="h-3.5 w-3.5" />
                                         View Details
                                     </Button>
-                                    {consultation.records &&
-                                        consultation.records.length > 0 && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 gap-1 px-3"
-                                            >
-                                                <Download className="h-3.5 w-3.5" />
-                                                Download Records
-                                            </Button>
-                                        )}
                                 </div>
                             </div>
                         ))}

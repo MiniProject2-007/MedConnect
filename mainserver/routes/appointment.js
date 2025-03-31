@@ -28,9 +28,13 @@ router.post(
 router.get("/getAvailableTimeSlots/:date", ClerkExpressRequireAuth({}), appointmentService.getAvailableTimeSlots);
 
 router.get("/upcomingAppointments/:date", ClerkExpressRequireAuth({}), appointmentService.getUpcomingAppointments);
-
 router.get("/pastAppointments/:date", ClerkExpressRequireAuth({}), appointmentService.getPastAppointments);
 router.get("/pastAppointmentsDoctor/:date", doctorAuth, appointmentService.getAppointmentsDoctorPast);
 router.get("/upcomingAppointmentsDoctor/:date", doctorAuth, appointmentService.getAppointmentsDoctorUpcoming);
 
+router.get(
+    "/getAppointment/:id",
+    ClerkExpressRequireAuth({}),
+    appointmentService.getAppointment
+);
 export default router;

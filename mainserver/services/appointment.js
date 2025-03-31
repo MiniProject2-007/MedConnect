@@ -12,7 +12,7 @@ class AppointmentService {
             if (!errors.isEmpty()) {
                 return res.status(400).json({ errors: errors.array() });
             }
-            const { userId, date, timeSlot, reason, appointmentType } = req.body;
+            const { userId, date, timeSlot, reason, appointmentType, user } = req.body;
 
             const isAvailable = await this.isTimeSlotAvailable(
                 format(new Date(date), "yyyy-MM-dd"),
@@ -25,12 +25,19 @@ class AppointmentService {
                     .json({ error: "Time Slot not available" });
             }
 
+
             const appointment = await Appointment.create({
                 userId,
                 date,
                 timeSlot,
                 reason,
                 appointmentType,
+                patientInfo: {
+                    email: user.emailAddresses[0].emailAddress,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    phone: user.phoneNumbers[0].phoneNumber,
+                }
             });
 
             if (appointment.appointmentType.trim().toLocaleLowerCase() === "video") {
@@ -228,6 +235,22 @@ class AppointmentService {
             res.status(500).json({ error: "Internal Server Error" });
         }
     };
+
+    getAppointment = async (req, res) => {
+        try {
+            const { id } = req.params;
+            const appointment = await Appointment.findById(id)
+                .populate("meeting records whiteboard")
+                .exec();
+            if (!appointment) {
+                return res.status(404).json({ error: "Appointment not found" });
+            }
+            res.status(200).json(appointment);
+        } catch (err) {
+            console.log("Get Appointment Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
 }
 
 export default new AppointmentService();
