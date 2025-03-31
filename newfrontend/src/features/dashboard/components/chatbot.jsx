@@ -117,7 +117,6 @@ const Chatbot = () => {
                 id: Date.now() + 1,
                 role: "assistant",
                 content:
-                    error.message ||
                     "Sorry, I'm having trouble connecting to the medical database right now.",
                 timestamp: new Date(),
                 isError: true,
