@@ -33,7 +33,7 @@ function ConsultationCard({ consultation, children }) {
     const getStatusColor = (status) => {
         const statusLower = status.toLowerCase();
         if (statusLower === "completed") return "bg-blue-500";
-        if (statusLower === "confirmed") return "bg-green-500";
+        if (statusLower === "approved") return "bg-green-500";
         if (statusLower === "pending") return "bg-amber-500";
         return "bg-red-500";
     };
@@ -42,7 +42,7 @@ function ConsultationCard({ consultation, children }) {
         const statusLower = status.toLowerCase();
         if (statusLower === "completed")
             return "bg-blue-50 text-blue-700 border-blue-200";
-        if (statusLower === "confirmed")
+        if (statusLower === "approved")
             return "bg-green-50 text-green-700 border-green-200";
         if (statusLower === "pending")
             return "bg-amber-50 text-amber-700 border-amber-200";

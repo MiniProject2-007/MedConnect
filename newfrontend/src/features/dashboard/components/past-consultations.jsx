@@ -25,24 +25,39 @@ export function PastConsultations() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const { getToken, userId } = useAuth();
+    const doctorToken = localStorage.getItem("doctorToken");
 
     const getPastAppointments = async () => {
         const today = format(new Date(), "yyyy-MM-dd");
         setIsLoading(true);
         try {
-            const res = await fetch(
-                `${
-                    import.meta.env.VITE_MAIN_SERVER_URL
-                }/appointment/pastAppointments/${today}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${await getToken()}`,
-                        userid: userId,
-                    },
-                }
-            );
+            const res = doctorToken
+                ? await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/pastAppointmentsDoctor/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              authorization: doctorToken,
+                              userid: userId,
+                          },
+                      }
+                  )
+                : await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/pastAppointments/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${await getToken()}`,
+                              userid: userId,
+                          },
+                      }
+                  );
 
             if (!res.ok) {
                 throw new Error("Failed to fetch past appointments");

@@ -17,24 +17,39 @@ export function UpcomingAppointments() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const { getToken, userId } = useAuth();
+    const doctorToken = localStorage.getItem("doctorToken");
 
     const getUpcomingConsultations = async () => {
         const today = format(new Date(), "yyyy-MM-dd");
         setIsLoading(true);
         try {
-            const res = await fetch(
-                `${
-                    import.meta.env.VITE_MAIN_SERVER_URL
-                }/appointment/upcomingAppointments/${today}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${await getToken()}`,
-                        userid: userId,
-                    },
-                }
-            );
+            const res = doctorToken
+                ? await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/upcomingAppointmentsDoctor/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              authorization: doctorToken,
+                              userid: userId,
+                          },
+                      }
+                  )
+                : await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/upcomingAppointments/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${await getToken()}`,
+                              userid: userId,
+                          },
+                      }
+                  );
 
             if (!res.ok) {
                 throw new Error("Failed to fetch appointments");
@@ -55,13 +70,11 @@ export function UpcomingAppointments() {
         getUpcomingConsultations();
     }, []);
 
-    // Helper function to get appointment type icon
     const getAppointmentTypeIcon = (type) => {
         if (type === "video") return <Video className="mr-1.5 h-3 w-3" />;
         return <MapPin className="mr-1.5 h-3 w-3" />;
     };
 
-    // Helper function to capitalize first letter
     const capitalize = (str) => {
         return str.charAt(0).toUpperCase() + str.slice(1);
     };
@@ -137,7 +150,7 @@ export function UpcomingAppointments() {
                                             appointment.status === "pending"
                                                 ? "bg-amber-50 text-amber-700 border-amber-200"
                                                 : appointment.status ===
-                                                  "confirmed"
+                                                  "approved"
                                                 ? "bg-green-50 text-green-700 border-green-200"
                                                 : "bg-blue-50 text-blue-700 border-blue-200"
                                         }`}
@@ -156,23 +169,6 @@ export function UpcomingAppointments() {
                                         {appointment.timeSlot}
                                     </div>
                                 </div>
-
-                                <div className="mt-4 flex gap-2">
-                                    {appointment.appointmentType ===
-                                        "video" && (
-                                        <Button className="h-8 gap-1 px-3">
-                                            <Video className="h-3.5 w-3.5" />
-                                            Join Call
-                                        </Button>
-                                    )}
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 gap-1 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                    >
-                                        Cancel
-                                    </Button>
-                                </div>
                             </div>
                         ))}
                     </div>
@@ -184,10 +180,16 @@ export function UpcomingAppointments() {
                         <h3 className="mt-4 text-lg font-medium">
                             No Upcoming Appointments
                         </h3>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Schedule your next appointment.
-                        </p>
-                        <Button className="mt-4">Book Appointment</Button>
+                        {!doctorToken && (
+                            <>
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    Schedule your next appointment.
+                                </p>
+                                <Button className="mt-4">
+                                    Book Appointment
+                                </Button>
+                            </>
+                        )}
                     </div>
                 )}
             </CardContent>

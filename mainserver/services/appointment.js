@@ -122,9 +122,16 @@ class AppointmentService {
             const availableSlotsFiltered = availableSlots.filter((slot) => {
                 let isAvailable = true;
                 for (let i = 0; i < appointments.length; i++) {
-                    if (appointments[i].timeSlot === slot) {
-                        isAvailable = false;
-                        break;
+                    if (
+                        appointments[i].date === date &&
+                        appointments[i].status !== "cancelled" &&
+                        appointments[i].status !== "completed" &&
+                        appointments[i].status !== "rejected"
+                    ) {
+                        if (appointments[i].timeSlot === slot) {
+                            isAvailable = false;
+                            break;
+                        }
                     }
                 }
                 return isAvailable;
@@ -166,13 +173,58 @@ class AppointmentService {
                 userId: userid,
                 date: { $lt: date },
             }).populate("meeting records whiteboard");
-
+            for (let i = 0; i < appointments.length; i++) {
+                if (appointments[i].status === "approved") {
+                    appointments[i].status = "completed"
+                    await appointments[i].save();
+                }
+            }
             appointments.sort((a, b) => {
                 return new Date(b.date) - new Date(a.date);
             })
             res.status(200).json(appointments);
         } catch (err) {
             console.log("Get Past Appointments Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
+
+    getAppointmentsDoctorPast = async (req, res) => {
+        try {
+            const { date } = req.params;
+            const appointments = await Appointment.find({
+                date: { $lt: date },
+            }).populate("meeting records whiteboard");
+            for (let i = 0; i < appointments.length; i++) {
+                if (appointments[i].status === "approved") {
+                    appointments[i].status = "completed"
+                    await appointments[i].save();
+                }
+            }
+            appointments.sort((a, b) => {
+                return new Date(b.date) - new Date(a.date);
+            })
+            res.status(200).json(appointments);
+        } catch (err) {
+            console.log("Get Past Appointments Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+
+    getAppointmentsDoctorUpcoming = async (req, res) => {
+        try {
+            const { date } = req.params;
+            const appointments = await Appointment.find({
+                date: { $gte: date },
+            }).populate("meeting records whiteboard");
+
+            appointments.sort((a, b) => {
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            res.status(200).json(appointments);
+        } catch (err) {
+            console.log("Get Upcoming Appointments Error: ", err);
             res.status(500).json({ error: "Internal Server Error" });
         }
     };

@@ -11,6 +11,7 @@ import { Toaster } from "sonner";
 import JoinMeetingPage from "./features/meeting/pages/join-meeting-page";
 import MeetingRoomPage from "./features/meeting/pages/meetin-room-page";
 import WhiteboardPage from "./features/meeting/pages/whiteboard-page";
+import DoctorSigninPage from "./features/auth/pages/doctor-signin-page";
 
 export default function App() {
     const { isSignedIn } = useAuth();
@@ -45,7 +46,11 @@ export default function App() {
                 )}
 
                 <Route path="/meeting/room/:id" element={<MeetingRoomPage />} />
-                <Route path="/meeting/whiteboard/:id" element={<WhiteboardPage />} />
+                <Route
+                    path="/meeting/whiteboard/:id"
+                    element={<WhiteboardPage />}
+                />
+                <Route path="/doctor-signin" element={<DoctorSigninPage />} />
             </Routes>
             <Toaster />
         </div>

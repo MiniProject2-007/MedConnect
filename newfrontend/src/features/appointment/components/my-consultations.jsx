@@ -28,22 +28,42 @@ export default function MyConsultations() {
     const [upcomingConsultations, setUpcomingConsultations] = useState([]);
     const [pastConsultations, setPastConsultations] = useState([]);
     const { getToken, userId } = useAuth();
+    const doctorToken = localStorage.getItem("doctorToken");
+
     const getUpcomingConsultations = async () => {
         const today = format(new Date(), "yyyy-MM-dd");
         try {
-            const res = await fetch(
-                `${
-                    import.meta.env.VITE_MAIN_SERVER_URL
-                }/appointment/upcomingAppointments/${today}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${await getToken()}`,
-                        userid: userId,
-                    },
-                }
-            );
+            const res = doctorToken
+                ? await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/upcomingAppointmentsDoctor/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              authorization: doctorToken,
+                              userid: userId,
+                          },
+                      }
+                  )
+                : await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/upcomingAppointments/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${await getToken()}`,
+                              userid: userId,
+                          },
+                      }
+                  );
+
+            if (!res.ok) {
+                throw new Error("Failed to fetch upcoming consultations");
+            }
             const data = await res.json();
             setUpcomingConsultations(data);
         } catch (e) {
@@ -53,19 +73,36 @@ export default function MyConsultations() {
     const getPastAppointments = async () => {
         const today = format(new Date(), "yyyy-MM-dd");
         try {
-            const res = await fetch(
-                `${
-                    import.meta.env.VITE_MAIN_SERVER_URL
-                }/appointment/pastAppointments/${today}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${await getToken()}`,
-                        userid: userId,
-                    },
-                }
-            );
+            const res = doctorToken
+                ? await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/pastAppointmentsDoctor/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              authorization: doctorToken,
+                              userid: userId,
+                          },
+                      }
+                  )
+                : await fetch(
+                      `${
+                          import.meta.env.VITE_MAIN_SERVER_URL
+                      }/appointment/pastAppointments/${today}`,
+                      {
+                          method: "GET",
+                          headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${await getToken()}`,
+                              userid: userId,
+                          },
+                      }
+                  );
+            if (!res.ok) {
+                throw new Error("Failed to fetch past appointments");
+            }
             const data = await res.json();
             setPastConsultations(data);
         } catch (e) {
@@ -109,6 +146,7 @@ export default function MyConsultations() {
                             <UpcomingConsultationCard
                                 key={consultation._id}
                                 consultation={consultation}
+                                refetch={getUpcomingConsultations}
                             />
                         ))
                     ) : (

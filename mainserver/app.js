@@ -6,6 +6,7 @@ import connectDB from "./db.js";
 import appointmentRouter from "./routes/appointment.js";
 import recordRouter from "./routes/record.js";
 import whiteboardRouter from "./routes/whiteboard.js";
+import doctorRouter from "./routes/doctor.js";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
 app.use("/api/appointment", appointmentRouter);
 app.use("/api/record", recordRouter);
 app.use("/api/whiteboard", whiteboardRouter);
+app.use("/api/doctor", doctorRouter);
 
 const startServer = async () => {
     try {

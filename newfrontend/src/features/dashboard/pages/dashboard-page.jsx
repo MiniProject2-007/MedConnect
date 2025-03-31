@@ -8,23 +8,12 @@ import { NotificationsSection } from "../components/notifications-section";
 
 function DashboardPage() {
     return (
-        <div className="grid gap-6 p-6 md:grid-cols-12">
-            {/* <div className="col-span-8">
-                <WelcomeSection />
-            </div> */}
-
-            <div className="col-span-12 md:col-span-8">
+        <div className="flex w-full flex-col gap-6 p-4 items-center">
+            <div className="min-w-[70%] max-w-4xl">
                 <UpcomingAppointments />
             </div>
-            <div className="col-span-12 md:col-span-4">
-                <QuickActions />
-            </div>
-
-            <div className="col-span-12 md:col-span-8">
+            <div className="min-w-[70%] max-w-4xl">
                 <PastConsultations />
-            </div>
-            <div className="col-span-12 md:col-span-4">
-                <NotificationsSection />
             </div>
         </div>
     );

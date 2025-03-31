@@ -39,9 +39,28 @@ const navItems = [
     },
 ];
 
+const doctorNavItems = [
+    {
+        title: "Dashboard",
+        icon: LayoutDashboard,
+        href: "/dashboard",
+    },
+    {
+        title: "My Consultations",
+        icon: ClipboardList,
+        href: "/dashboard/consultations",
+    },
+    {
+        title: "Settings",
+        icon: Settings,
+        href: "/dashboard/settings",
+    },
+];
+
 export function Sidebar() {
     const { sidebarOpen, toggleSidebar, currentUser } = useDashboard();
     const location = useLocation(); // Get current pathname
+    const doctorToken = localStorage.getItem("doctorToken");
 
     return (
         <>
@@ -86,38 +105,79 @@ export function Sidebar() {
                 </div>
 
                 <ScrollArea className="flex-1 px-4 py-4">
-                    <div className="flex flex-col gap-1">
-                        {navItems.map((item) => (
-                            <Button
-                                key={item.href}
-                                variant="ghost"
-                                className={cn(
-                                    "justify-start",
-                                    location.pathname.includes(item.href) &&
-                                        "bg-sidebar-accent text-sidebar-accent-foreground",
-                                    !sidebarOpen && "md:justify-center"
-                                )}
-                                asChild
-                            >
-                                <Link to={item.href}>
-                                    <item.icon className="mr-2 h-5 w-5" />
-                                    {sidebarOpen && <span>{item.title}</span>}
-                                </Link>
-                            </Button>
-                        ))}
-                    </div>
+                    {doctorToken ? (
+                        <div className="flex flex-col gap-1">
+                            {doctorNavItems.map((item) => (
+                                <Button
+                                    key={item.href}
+                                    variant="ghost"
+                                    className={cn(
+                                        "justify-start",
+                                        location.pathname.includes(item.href) &&
+                                            "bg-sidebar-accent text-sidebar-accent-foreground",
+                                        !sidebarOpen && "md:justify-center"
+                                    )}
+                                    asChild
+                                >
+                                    <Link to={item.href}>
+                                        <item.icon className="mr-2 h-5 w-5" />
+                                        {sidebarOpen && (
+                                            <span>{item.title}</span>
+                                        )}
+                                    </Link>
+                                </Button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-1">
+                            {navItems.map((item) => (
+                                <Button
+                                    key={item.href}
+                                    variant="ghost"
+                                    className={cn(
+                                        "justify-start",
+                                        location.pathname.includes(item.href) &&
+                                            "bg-sidebar-accent text-sidebar-accent-foreground",
+                                        !sidebarOpen && "md:justify-center"
+                                    )}
+                                    asChild
+                                >
+                                    <Link to={item.href}>
+                                        <item.icon className="mr-2 h-5 w-5" />
+                                        {sidebarOpen && (
+                                            <span>{item.title}</span>
+                                        )}
+                                    </Link>
+                                </Button>
+                            ))}
+                        </div>
+                    )}
                 </ScrollArea>
 
                 <div className="border-t p-4">
-                    <SignOutButton>
+                    {doctorToken ? (
                         <Button
+                            onClick={() => {
+                                localStorage.removeItem("doctorToken");
+                                window.location.href = "/doctor-signin";
+                            }}
                             variant="ghost"
                             className="w-full flex items-center justify-center gap-2 transition-all duration-200  hover:bg-red-50 hover:text-red-600 focus:ring-2 cursor-pointer"
                         >
                             <span>Sign Out</span>
                             <LogOutIcon className="h-4 w-4" />
                         </Button>
-                    </SignOutButton>
+                    ) : (
+                        <SignOutButton>
+                            <Button
+                                variant="ghost"
+                                className="w-full flex items-center justify-center gap-2 transition-all duration-200  hover:bg-red-50 hover:text-red-600 focus:ring-2 cursor-pointer"
+                            >
+                                <span>Sign Out</span>
+                                <LogOutIcon className="h-4 w-4" />
+                            </Button>
+                        </SignOutButton>
+                    )}
                 </div>
             </aside>
         </>

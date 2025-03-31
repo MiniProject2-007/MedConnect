@@ -11,8 +11,8 @@ export function PastConsultationCard({ consultation }) {
                 size="sm"
                 className="h-9 gap-1 rounded-full"
             >
-                <FileText className="h-3.5 w-3.5" />
-                View Summary
+                <FileCheck className="h-3.5 w-3.5" />
+                View Details
             </Button>
 
             {consultation.prescriptions && (

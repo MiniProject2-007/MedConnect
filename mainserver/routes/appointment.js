@@ -2,6 +2,7 @@ import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import { Router } from "express";
 import appointmentService from "../services/appointment.js";
 import { createAppointmentValidator } from "../validators/appointment.js";
+import doctorAuth from "../middlewares/doctorAuth.js";
 
 const router = Router();
 
@@ -29,21 +30,7 @@ router.get("/getAvailableTimeSlots/:date", ClerkExpressRequireAuth({}), appointm
 router.get("/upcomingAppointments/:date", ClerkExpressRequireAuth({}), appointmentService.getUpcomingAppointments);
 
 router.get("/pastAppointments/:date", ClerkExpressRequireAuth({}), appointmentService.getPastAppointments);
-
-// router.post(
-//     "/approveAppointment/:id",
-//     ClerkExpressRequireAuth({}),
-//     appointmentService.approveAppointment
-// );
-// router.post(
-//     "/rejectAppointment/:id",
-//     ClerkExpressRequireAuth({}),
-//     appointmentService.rejectAppointment
-// );
-// router.get(
-//     "/getCompletedAppointments",
-//     ClerkExpressRequireAuth({}),
-//     appointmentService.getCompletedAppointments
-// );
+router.get("/pastAppointmentsDoctor/:date", doctorAuth, appointmentService.getAppointmentsDoctorPast);
+router.get("/upcomingAppointmentsDoctor/:date", doctorAuth, appointmentService.getAppointmentsDoctorUpcoming);
 
 export default router;
