@@ -85,4 +85,4 @@ setInterval(async () => {
             saveSnapshot(roomId, snapshot);
         }
     }
-}, 10000);
+}, 2000);
