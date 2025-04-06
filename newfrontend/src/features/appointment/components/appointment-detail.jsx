@@ -457,34 +457,39 @@ const AppointmentDetail = () => {
                                     </div>
                                 )}
 
-                            {/* Whiteboard */}
-                            {appointment.whiteboard && (
-                                <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
-                                    <div className="p-4 flex items-center justify-between">
-                                        <div>
-                                            <h3 className="font-medium">
-                                                Whiteboard
-                                            </h3>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Last modified:{" "}
-                                                {formatDate(
-                                                    appointment.whiteboard
-                                                        .lastModified
-                                                )}{" "}
-                                                at{" "}
-                                                {formatTime(
-                                                    appointment.whiteboard
-                                                        .lastModified
-                                                )}
-                                            </p>
-                                        </div>
-                                        <Button className="gap-1">
-                                            <PenTool size={14} />
-                                            <span>Open Whiteboard</span>
-                                        </Button>
+                            <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
+                                <div className="p-4 flex items-center justify-between">
+                                    <div>
+                                        <h3 className="font-medium">
+                                            Whiteboard
+                                        </h3>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Last modified:{" "}
+                                            {formatDate(
+                                                appointment.whiteboard
+                                                    .lastModified
+                                            )}{" "}
+                                            at{" "}
+                                            {formatTime(
+                                                appointment.whiteboard
+                                                    .lastModified
+                                            )}
+                                        </p>
                                     </div>
+                                    <Button
+                                        className="gap-1"
+                                        onClick={() => {
+                                            window.open(
+                                                `http://localhost:3000/meeting/whiteboard/${appointment.slug}`,
+                                                "_blank"
+                                            );
+                                        }}
+                                    >
+                                        <PenTool size={14} />
+                                        <span>Open Whiteboard</span>
+                                    </Button>
                                 </div>
-                            )}
+                            </div>
 
                             {/* Appointment Summary */}
                             {appointment.summary && (

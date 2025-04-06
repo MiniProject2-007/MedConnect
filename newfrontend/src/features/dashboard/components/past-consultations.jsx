@@ -101,8 +101,10 @@ export function PastConsultations() {
                         Your previous appointments
                     </CardDescription>
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                    <a href="/consultations">View All</a>
+                <Button variant="outline" size="sm"  onClick={() => {
+                    navigate("/dashboard/consultations")
+                }}>
+                    View All
                 </Button>
             </CardHeader>
             <CardContent>

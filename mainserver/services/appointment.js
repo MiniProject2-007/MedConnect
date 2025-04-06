@@ -24,10 +24,18 @@ class AppointmentService {
                     .status(400)
                     .json({ error: "Time Slot not available" });
             }
-
-
+            let meeting, whiteboard;
+            if (appointmentType.trim().toLocaleLowerCase() === "video") {
+                meeting = await meetingService.createMeeting();
+                whiteboard = new WhiteBoard({
+                    slug: meeting.slug,
+                    data: `{"clock": 3, "tombstones": {}, "schema": { "schemaVersion": 2, "sequences": { "com.tldraw.store": 4, "com.tldraw.asset": 1, "com.tldraw.camera": 1, "com.tldraw.document": 2, "com.tldraw.instance": 25, "com.tldraw.instance_page_state": 5, "com.tldraw.page": 1, "com.tldraw.instance_presence": 5, "com.tldraw.pointer": 1, "com.tldraw.shape": 4, "com.tldraw.asset.bookmark": 2, "com.tldraw.asset.image": 5, "com.tldraw.asset.video": 5, "com.tldraw.shape.arrow": 5, "com.tldraw.shape.bookmark": 2, "com.tldraw.shape.draw": 2, "com.tldraw.shape.embed": 4, "com.tldraw.shape.frame": 0, "com.tldraw.shape.geo": 9, "com.tldraw.shape.group": 0, "com.tldraw.shape.highlight": 1, "com.tldraw.shape.image": 4, "com.tldraw.shape.line": 5, "com.tldraw.shape.note": 8, "com.tldraw.shape.text": 2, "com.tldraw.shape.video": 2, "com.tldraw.binding.arrow": 0 } }, "documents": [{ "state": { "gridSize": 10, "name": "", "meta": {}, "id": "document:document", "typeName": "document" }, "lastChangedClock": 0 }, { "state": { "meta": {}, "id": "page:QJIaG7rq4rFZk0AcktF_Z", "name": "Page 1", "index": "a1", "typeName": "page" }, "lastChangedClock": 0 }]}`
+                })
+                await whiteboard.save();
+            }
             const appointment = await Appointment.create({
                 userId,
+                slug: meeting.slug,
                 date,
                 timeSlot,
                 reason,
@@ -37,15 +45,11 @@ class AppointmentService {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     phone: user.phoneNumbers[0].phoneNumber,
-                }
+                },
+                meeting: meeting && meeting.meeting._id,
+                whiteboard: whiteboard && whiteboard._id,
+                records: [],
             });
-
-            if (appointment.appointmentType.trim().toLocaleLowerCase() === "video") {
-                const meeting = await meetingService.createMeeting();
-                await Appointment.findByIdAndUpdate(appointment._id, {
-                    meeting: meeting.meeting._id,
-                });
-            }
 
             res.status(201).json(appointment);
         } catch (err) {

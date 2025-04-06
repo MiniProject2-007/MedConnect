@@ -29,6 +29,11 @@ const appointmentSchema = new mongoose.Schema(
             type: patientInfo,
             required: true,
         },
+        slug:{
+            type: String,
+            required: true,
+            unique: true,
+        },
         date: {
             type: String,
             required: true,
@@ -62,7 +67,7 @@ const appointmentSchema = new mongoose.Schema(
         ],
         whiteboard: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Whiteboard",
+            ref: "WhiteBoard",
         },
         summary: {
             type: String,

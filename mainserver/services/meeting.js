@@ -9,7 +9,7 @@ class MeetingService {
                 slug,
                 duration: 30,
             });
-            return { success: true, meeting: meeting };
+            return { success: true, slug: slug, meeting: meeting };
         } catch (err) {
             console.log("Create Meeting Error: ", err);
             return { success: false, slug: null };

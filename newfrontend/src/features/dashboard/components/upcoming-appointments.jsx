@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, MapPin, Video, AlertCircle } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
+import { useNavigate } from "react-router";
 
 export function UpcomingAppointments() {
     const [upcomingConsultations, setUpcomingConsultations] = useState([]);
@@ -18,6 +19,7 @@ export function UpcomingAppointments() {
     const [error, setError] = useState(null);
     const { getToken, userId } = useAuth();
     const doctorToken = localStorage.getItem("doctorToken");
+    const navigate = useNavigate();
 
     const getUpcomingConsultations = async () => {
         const today = format(new Date(), "yyyy-MM-dd");
@@ -185,7 +187,9 @@ export function UpcomingAppointments() {
                                 <p className="mt-2 text-sm text-muted-foreground">
                                     Schedule your next appointment.
                                 </p>
-                                <Button className="mt-4">
+                                <Button className="mt-4" onClick={() => {
+                                    navigate("/dashboard/book-appointment")
+                                }}>
                                     Book Appointment
                                 </Button>
                             </>

@@ -440,7 +440,8 @@ const MeetingRoom = ({}) => {
                                     className="rounded-full w-10 h-10 border-[] hover:bg-gray-100"
                                     onClick={() => {
                                         window.open(
-                                            `/meeting/whiteboard/${slug}`
+                                            `http://localhost:3000/meeting/whiteboard/${slug}`,
+                                            "_blank"
                                         );
                                     }}
                                 >
