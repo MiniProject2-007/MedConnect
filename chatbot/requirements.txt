@@ -3,3 +3,7 @@ uvicorn
 chromadb
 together
 jsonschema
+jose
+dotenv
+requests
+motor

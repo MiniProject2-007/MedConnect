@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@clerk/clerk-react";
 
 const INITIAL_MESSAGES = [
     {
@@ -34,6 +35,7 @@ const Chatbot = () => {
     const [error, setError] = useState(null);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+    const { getToken } = useAuth();
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -90,7 +92,14 @@ const Chatbot = () => {
             const response = await fetch(
                 `${
                     import.meta.env.VITE_CHATBOT_SERVER_URL
-                }/search?query=${encodeURIComponent(userMessage.content)}`
+                }/search?query=${encodeURIComponent(userMessage.content)}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${await getToken()} `,
+                    },
+                }
             );
 
             if (!response.ok) {
