@@ -163,7 +163,7 @@ class AppointmentService {
             const appointments = await Appointment.find({
                 userId: userid,
                 date: { $gte: date },
-            }).populate("meeting records whiteboard");
+            }).populate("meeting records WhiteBoard");
 
             appointments.sort((a, b) => {
                 return new Date(a.date) - new Date(b.date);
@@ -183,7 +183,7 @@ class AppointmentService {
             const appointments = await Appointment.find({
                 userId: userid,
                 date: { $lt: date },
-            }).populate("meeting records whiteboard");
+            }).populate("meeting records WhiteBoard");
             for (let i = 0; i < appointments.length; i++) {
                 if (appointments[i].status === "approved") {
                     appointments[i].status = "completed"
@@ -205,7 +205,7 @@ class AppointmentService {
             const { date } = req.params;
             const appointments = await Appointment.find({
                 date: { $lt: date },
-            }).populate("meeting records whiteboard");
+            }).populate("meeting records WhiteBoard");
             for (let i = 0; i < appointments.length; i++) {
                 if (appointments[i].status === "approved") {
                     appointments[i].status = "completed"
@@ -227,7 +227,7 @@ class AppointmentService {
             const { date } = req.params;
             const appointments = await Appointment.find({
                 date: { $gte: date },
-            }).populate("meeting records whiteboard");
+            }).populate("meeting records WhiteBoard");
 
             appointments.sort((a, b) => {
                 return new Date(a.date) - new Date(b.date);
@@ -244,7 +244,7 @@ class AppointmentService {
         try {
             const { id } = req.params;
             const appointment = await Appointment.findById(id)
-                .populate("meeting records whiteboard")
+                .populate("meeting records WhiteBoard")
                 .exec();
             if (!appointment) {
                 return res.status(404).json({ error: "Appointment not found" });
