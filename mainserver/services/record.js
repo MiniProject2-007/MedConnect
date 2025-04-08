@@ -16,7 +16,7 @@ class RecordService {
             const { userId, description, meetingId } = req.body;
 
             const appointment = Appointment.findOne({
-                meetingId: meetingId,
+                slug: meetingId,
                 userId: userId,
             });
             if (!appointment) {
