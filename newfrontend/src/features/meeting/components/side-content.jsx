@@ -119,7 +119,7 @@ const SideContent = ({ roomId }) => {
             const response = await fetch(
                 `${
                     import.meta.env.VITE_MAIN_SERVER_URL
-                }/record/getRecords?meetingId=${roomId}`,
+                }/record/getRecords/${roomId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${await getToken()}`,

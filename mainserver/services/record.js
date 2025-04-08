@@ -52,8 +52,7 @@ class RecordService {
             }
 
             const appointment = await Appointment.findOne({
-                meetingId: meetingId,
-                userId: req.user._id,
+                slug: meetingId,
             }).populate("records");
             if (!appointment) {
                 return res.status(400).send({ message: "Invalid meetingId" });
