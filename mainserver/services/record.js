@@ -46,7 +46,7 @@ class RecordService {
 
     getRecords = async (req, res) => {
         try {
-            const { meetingId } = req.query;
+            const { meetingId } = req.params;
             if (!meetingId) {
                 return res.status(400).send({ message: "meetingId is required" });
             }
