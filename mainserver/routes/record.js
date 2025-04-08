@@ -14,11 +14,6 @@ router.post(
     recordService.createRecord
 );
 
-router.get("/getRecords", ClerkExpressRequireAuth(), recordService.getRecords);
-router.get(
-    "/getRecordsMeeting/:meetingId",
-    ClerkExpressRequireAuth(),
-    recordService.getRecordsMeetingId
-);
+router.get("/getRecords/:meetingId", ClerkExpressRequireAuth(), recordService.getRecords);
 
 export default router;
