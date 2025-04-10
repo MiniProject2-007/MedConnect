@@ -666,7 +666,7 @@ const AppointmentDetail = () => {
                 )}
             </main>
 
-            {appointment && (
+            {appointment && appointment.transcript && (
                 <TranscriptDrawer
                     open={transcriptDrawerOpen}
                     onOpenChange={setTranscriptDrawerOpen}
