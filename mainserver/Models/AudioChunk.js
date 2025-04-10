@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 
 const audioChunkSchema = new mongoose.Schema({
-    meetingId: {
+    slug: {
         type: String,
         required: true
     },

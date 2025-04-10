@@ -1,4 +1,3 @@
-import React from "react";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -14,6 +13,8 @@ import {
     Presentation,
     Clock,
     ScreenShare,
+    RepeatIcon,
+    StopCircle,
 } from "lucide-react";
 import { useSocket } from "../hooks/use-socket";
 import { useNavigate, useParams } from "react-router";
@@ -21,8 +22,11 @@ import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import SideContent from "./side-content";
 import peer from "../services/peer";
 import { addMessage } from "@/lib/redux/features/chatSlice";
+import { useAudioRecorder } from "../hooks/use-audio-recorder";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/use-toast";
 
-const MeetingRoom = ({}) => {
+const MeetingRoom = () => {
     const { id: slug } = useParams();
     const socket = useSocket();
     const [remoteSocketId, setRemoteSocketId] = useState(null);
@@ -34,8 +38,16 @@ const MeetingRoom = ({}) => {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [meetingDuration, setMeetingDuration] = useState(0);
     const [meetingStartTime, setMeetingStartTime] = useState(null);
+    const [isScreenSharing, setIsScreenSharing] = useState(false);
     const messages = useAppSelector((state) => state.chat.chat);
     const dispatch = useAppDispatch();
+    const {
+        isRecording,
+        startRecording,
+        stopRecording,
+        recordingTime,
+        recordingStatus,
+    } = useAudioRecorder(slug);
 
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
@@ -106,6 +118,10 @@ const MeetingRoom = ({}) => {
     }, [myStream, isVideoOn, remoteSocketId, socket]);
 
     const handleEndCall = useCallback(() => {
+        if (isRecording) {
+            stopRecording();
+        }
+
         if (myStream) {
             myStream.getTracks().forEach((track) => track.stop());
         }
@@ -125,7 +141,15 @@ const MeetingRoom = ({}) => {
 
         socket.emit("call:end", { to: remoteSocketId });
         navigate("/dashboard"); // Or wherever you want to redirect after call ends
-    }, [myStream, remoteStream, remoteSocketId, socket, navigate]);
+    }, [
+        myStream,
+        remoteStream,
+        remoteSocketId,
+        socket,
+        navigate,
+        isRecording,
+        stopRecording,
+    ]);
 
     // Update video refs when streams change
     useEffect(() => {
@@ -238,7 +262,24 @@ const MeetingRoom = ({}) => {
         } catch (error) {
             console.error("Error sharing screen:", error);
         }
-    }, []);
+    }, [isScreenSharing]);
+
+    const handleToggleRecording = useCallback(() => {
+        if (isRecording) {
+            stopRecording();
+            toast({
+                title: "Recording stopped",
+                description: "Your recording has been saved",
+            });
+        } else {
+            startRecording();
+            toast({
+                title: "Recording started",
+                description: "Recording continuously in 1-minute chunks",
+            });
+        }
+    }, [isRecording, startRecording, stopRecording]);
+
     useEffect(() => {
         peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
         return () => {
@@ -426,6 +467,33 @@ const MeetingRoom = ({}) => {
                                             : "Turn on camera"}
                                     </div>
                                 </div>
+                                <div className="relative group">
+                                    <Button
+                                        variant={
+                                            isRecording
+                                                ? "destructive"
+                                                : "outline"
+                                        }
+                                        size="icon"
+                                        className={`rounded-full w-10 h-10 ${
+                                            isRecording
+                                                ? ""
+                                                : "border-[] hover:bg-gray-100"
+                                        }`}
+                                        onClick={handleToggleRecording}
+                                    >
+                                        {isRecording ? (
+                                            <StopCircle className="w-5 h-5" />
+                                        ) : (
+                                            <RepeatIcon className="w-5 h-5" />
+                                        )}
+                                    </Button>
+                                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {isRecording
+                                            ? "Stop recording"
+                                            : "Start recording"}
+                                    </div>
+                                </div>
                                 <Button
                                     variant="destructive"
                                     size="icon"
@@ -463,7 +531,7 @@ const MeetingRoom = ({}) => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="border-[]  hover:bg-gray-100"
+                                            className="border-[] hover:bg-gray-100"
                                         >
                                             <MessageSquare className="w-4 h-4" />
                                         </Button>
@@ -487,6 +555,22 @@ const MeetingRoom = ({}) => {
                         <Clock className="w-4 h-4" />
                         <span>{formatDuration(meetingDuration)}</span>
                     </div>
+                    {isRecording && (
+                        <div className="absolute top-16 right-4">
+                            <Badge
+                                variant="destructive"
+                                className="flex items-center gap-2 px-3 py-1"
+                            >
+                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                Recording {formatDuration(recordingTime)}
+                                {recordingStatus && (
+                                    <span className="text-xs">
+                                        ({recordingStatus})
+                                    </span>
+                                )}
+                            </Badge>
+                        </div>
+                    )}
                 </>
             )}
         </div>

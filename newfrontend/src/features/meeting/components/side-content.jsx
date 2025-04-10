@@ -14,6 +14,7 @@ import { addMessage } from "@/lib/redux/features/chatSlice";
 const SideContent = ({ roomId }) => {
     console.log(roomId);
     const [newMessage, setNewMessage] = useState("");
+    const [isLoadingFile, setIsLoadingFile] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [files, setFiles] = useState([]);
     const messages = useAppSelector((state) => state.chat.chat);
@@ -79,7 +80,7 @@ const SideContent = ({ roomId }) => {
     // File upload using fetch
     const uploadFile = async () => {
         if (!selectedFile) return;
-
+        setIsLoadingFile(true);
         const formData = new FormData();
         formData.append("file", selectedFile);
         formData.append("userId", userId);
@@ -111,6 +112,8 @@ const SideContent = ({ roomId }) => {
             }
         } catch (error) {
             console.error("Error uploading file:", error);
+        } finally {
+            setIsLoadingFile(false);
         }
     };
 
@@ -242,7 +245,10 @@ const SideContent = ({ roomId }) => {
                         onChange={(e) => setSelectedFile(e.target.files[0])}
                         className="mb-4"
                     />
-                    <Button onClick={uploadFile} disabled={!selectedFile}>
+                    <Button
+                        onClick={uploadFile}
+                        disabled={!selectedFile || isLoadingFile}
+                    >
                         <FileUp className="mr-2 h-4 w-4" /> Upload File
                     </Button>
                     <ScrollArea className="flex-1">
