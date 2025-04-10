@@ -16,5 +16,11 @@ router.post(
     transcriptService.uploadAudio
 );
 
+router.post(
+    "/generateTranscript/:slug",
+    ClerkExpressRequireAuth(),
+    transcriptService.generateTranscript
+);
+
 
 export default router;

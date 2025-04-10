@@ -11,24 +11,22 @@ import {
     CheckCircle,
     XCircle,
     AlertCircle,
-    Edit,
-    Trash2,
     ArrowLeft,
-    MessageSquare,
-    Clipboard,
     PenTool,
     Download,
-    LinkIcon,
     ChevronDown,
     ChevronUp,
     Mail,
     Phone,
+    FileAudio,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/clerk-react";
+import { toast } from "sonner";
+import { TranscriptDrawer } from "./transcript";
 
 const getStatusColor = (status) => {
     switch (status) {
@@ -73,6 +71,8 @@ const AppointmentDetail = () => {
         reason: true,
         summary: true,
     });
+    const [generatingTranscript, setGeneratingTranscript] = useState(false);
+    const [transcriptDrawerOpen, setTranscriptDrawerOpen] = useState(false);
 
     const { getToken } = useAuth();
 
@@ -136,15 +136,20 @@ const AppointmentDetail = () => {
     };
 
     const getPatientInitials = () => {
-        if (!appointment.patientInfo) return "?";
+        if (!appointment?.patientInfo) return "?";
         return `${appointment.patientInfo.firstName.charAt(
             0
         )}${appointment.patientInfo.lastName.charAt(0)}`;
     };
 
     const getPatientFullName = () => {
-        if (!appointment.patientInfo) return "Unknown Patient";
+        if (!appointment?.patientInfo) return "Unknown Patient";
         return `${appointment.patientInfo.firstName} ${appointment.patientInfo.lastName}`;
+    };
+
+    const getDoctorName = () => {
+        if (!appointment?.doctorInfo) return "Doctor";
+        return `Dr. ${appointment.doctorInfo.firstName} ${appointment.doctorInfo.lastName}`;
     };
 
     const getRecordTypeIcon = (recordType) => {
@@ -160,6 +165,44 @@ const AppointmentDetail = () => {
             default:
                 return <FileText className="h-4 w-4 text-gray-500" />;
         }
+    };
+
+    const generateTranscript = async () => {
+        setGeneratingTranscript(true);
+        try {
+            const res = await fetch(
+                `${
+                    import.meta.env.VITE_MAIN_SERVER_URL
+                }/transcript/generateTranscript/${appointment.slug}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${await getToken()}`,
+                    },
+                }
+            );
+            if (!res.ok) {
+                throw new Error("Failed to generate transcript");
+            }
+            const data = await res.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            toast.success("Transcript generated successfully!");
+
+            // Refresh appointment data to get updated transcript status
+            getAppointment();
+        } catch (error) {
+            console.error("Error generating transcript:", error);
+            toast.error("Failed to generate transcript. Please try again.");
+        } finally {
+            setGeneratingTranscript(false);
+        }
+    };
+
+    const handleViewTranscript = () => {
+        setTranscriptDrawerOpen(true);
     };
 
     if (!appointment) {
@@ -194,7 +237,7 @@ const AppointmentDetail = () => {
             </header>
 
             {/* Main content */}
-            <main className="container mx-auto py-6 px-4">
+            <main className="container mx-auto py-6 px-4 md:px-6">
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -252,7 +295,7 @@ const AppointmentDetail = () => {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="flex items-start gap-3">
                                             <div className="bg-primary/10 p-2 rounded-full">
                                                 <Calendar
@@ -365,6 +408,38 @@ const AppointmentDetail = () => {
                                                         minutes
                                                     </p>
                                                 </div>
+                                                {!appointment.transcript ? (
+                                                    <Button
+                                                        className="gap-2 mt-2 sm:mt-0"
+                                                        variant="outline"
+                                                        onClick={
+                                                            generateTranscript
+                                                        }
+                                                        disabled={
+                                                            generatingTranscript
+                                                        }
+                                                    >
+                                                        <FileAudio size={16} />
+                                                        <span>
+                                                            {generatingTranscript
+                                                                ? "Generating..."
+                                                                : "Generate Transcript"}
+                                                        </span>
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        className="gap-2 mt-2 sm:mt-0"
+                                                        variant="outline"
+                                                        onClick={
+                                                            handleViewTranscript
+                                                        }
+                                                    >
+                                                        <FileAudio size={16} />
+                                                        <span>
+                                                            View Transcript
+                                                        </span>
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -408,7 +483,7 @@ const AppointmentDetail = () => {
                                             <h3 className="font-medium mb-3">
                                                 Medical Records
                                             </h3>
-                                            <div className="space-y-2">
+                                            <div className="space-y-3">
                                                 {appointment.records.map(
                                                     (record) => (
                                                         <div
@@ -458,7 +533,7 @@ const AppointmentDetail = () => {
                                 )}
 
                             <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
-                                <div className="p-4 flex items-center justify-between">
+                                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div>
                                         <h3 className="font-medium">
                                             Whiteboard
@@ -467,17 +542,17 @@ const AppointmentDetail = () => {
                                             Last modified:{" "}
                                             {formatDate(
                                                 appointment.whiteboard
-                                                    .lastModified
+                                                    ?.lastModified
                                             )}{" "}
                                             at{" "}
                                             {formatTime(
                                                 appointment.whiteboard
-                                                    .lastModified
+                                                    ?.lastModified
                                             )}
                                         </p>
                                     </div>
                                     <Button
-                                        className="gap-1"
+                                        className="gap-2"
                                         onClick={() => {
                                             window.open(
                                                 `http://localhost:3000/meeting/whiteboard/${appointment.slug}`,
@@ -590,6 +665,14 @@ const AppointmentDetail = () => {
                     </div>
                 )}
             </main>
+
+            {appointment && (
+                <TranscriptDrawer
+                    open={transcriptDrawerOpen}
+                    onOpenChange={setTranscriptDrawerOpen}
+                    transcript={appointment.transcript}
+                />
+            )}
         </div>
     );
 };

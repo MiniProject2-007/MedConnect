@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import meetingService from "./meeting.js";
 import Record from "../Models/Record.js";
 import WhiteBoard from "../Models/WhiteBoard.js";
+import Transcript from "../Models/Transcript.js";
 
 class AppointmentService {
     createAppointment = async (req, res) => {
@@ -243,11 +244,19 @@ class AppointmentService {
     getAppointment = async (req, res) => {
         try {
             const { id } = req.params;
-            const appointment = await Appointment.findById(id)
+            let appointment = await Appointment.findById(id)
                 .populate("meeting records whiteboard")
                 .exec();
+
             if (!appointment) {
                 return res.status(404).json({ error: "Appointment not found" });
+            }
+            const transcript = await Transcript.findOne({ slug: appointment.slug });
+            if (transcript) {
+                appointment = {
+                    ...appointment._doc,
+                    transcript: transcript,
+                }
             }
             res.status(200).json(appointment);
         } catch (err) {

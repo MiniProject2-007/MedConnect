@@ -22,6 +22,12 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^6.9.16",
+    "vosk": "^0.3.32",
+    "fluent-ffmpeg": "^2.1.2"
+  },
+  "overrides": {
+    "ffi-napi": "npm:@2060.io/ffi-napi",
+    "ref-napi": "npm:@2060.io/ref-napi"
   }
 }
