@@ -17,9 +17,9 @@ class RecordService {
 
             const appointment = await Appointment.findOne({
                 slug: meetingId,
-                userId: userId,
             });
             if (!appointment) {
+                console.log(meetingId)
                 return res.status(400).send({ message: "Invalid meetingId" });
             }
 
@@ -35,11 +35,9 @@ class RecordService {
             await record.save();
             const temp = await Appointment.updateOne({
                 slug: meetingId,
-                userId: userId,
             },
                 { $push: { records: record._id } }
             );
-            console.log(meetingId)
             console.log(temp)
             res.status(201).send({ message: "Record created successfully" });
         } catch (e) {
