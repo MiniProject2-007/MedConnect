@@ -555,7 +555,7 @@ const AppointmentDetail = () => {
                                         className="gap-2"
                                         onClick={() => {
                                             window.open(
-                                                `http://localhost:3000/meeting/whiteboard/${appointment.slug}`,
+                                                `${import.meta.env.VITE_WHITEBOARD_URL}${appointment.slug}`,
                                                 "_blank"
                                             );
                                         }}
