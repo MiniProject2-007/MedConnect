@@ -15,7 +15,7 @@ class RecordService {
             await uploadFile({ buffer, mimetype: file.mimetype }, key);
             const { userId, description, meetingId } = req.body;
 
-            const appointment = Appointment.findOne({
+            const appointment = await Appointment.findOne({
                 slug: meetingId,
                 userId: userId,
             });
