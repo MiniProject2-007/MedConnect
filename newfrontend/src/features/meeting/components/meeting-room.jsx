@@ -560,7 +560,7 @@ const MeetingRoom = () => {
                         <div className="absolute top-16 right-4">
                             <Badge
                                 variant="destructive"
-                                className="flex items-center gap-2 px-3 py-1"
+                                className="text-white flex items-center gap-2 px-3 py-1"
                             >
                                 <div className="text-white w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                                 Recording {formatDuration(recordingTime)}
