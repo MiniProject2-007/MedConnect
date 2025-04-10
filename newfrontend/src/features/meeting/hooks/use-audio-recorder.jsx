@@ -31,7 +31,7 @@ export function useAudioRecorder(meetingId) {
             formData.append("slug", meetingId);
             formData.append("userId", user?.id || "unknown");
             formData.append("speaker", `${token ? "doctor" : "patient"}`);
-            formData.append("timestamp", timestamp.toString());
+            formData.append("timestamp", new Date(timestamp).toISOString());
 
             const response = await fetch(`${import.meta.env.VITE_MAIN_SERVER_URL}/transcript/uploadAudio`, {
                 method: "POST",
