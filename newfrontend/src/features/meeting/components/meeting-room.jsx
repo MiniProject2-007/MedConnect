@@ -562,7 +562,7 @@ const MeetingRoom = () => {
                                 variant="destructive"
                                 className="flex items-center gap-2 px-3 py-1"
                             >
-                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                <div className="text-white w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                                 Recording {formatDuration(recordingTime)}
                                 {recordingStatus && (
                                     <span className="text-xs">

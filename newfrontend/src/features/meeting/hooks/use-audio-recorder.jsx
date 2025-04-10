@@ -10,92 +10,91 @@ export function useAudioRecorder(meetingId) {
     const audioStreamRef = useRef(null);
     const recordingStartTimeRef = useRef(null);
     const timerRef = useRef(null);
+    const chunkIntervalRef = useRef(null);
     const uploadQueueRef = useRef([]);
     const isUploadingRef = useRef(false);
     const { user } = useUser();
     const { getToken } = useAuth();
 
+    // Upload logic unchanged...
     const processUploadQueue = useCallback(async () => {
         if (isUploadingRef.current || uploadQueueRef.current.length === 0)
             return;
-
         isUploadingRef.current = true;
-        const token = localStorage.getItem("doctorToken");
+
         try {
-            const { blob, timestamp } = uploadQueueRef.current[0];
-
+            const { blob, meta } = uploadQueueRef.current[0];
             setRecordingStatus("Uploading chunk...");
-
             const formData = new FormData();
-            formData.append("audio", blob, "recording.mp3");
+            // descriptive filename
+            const filename = `audio_${meetingId}_${
+                meta.speaker
+            }_${Date.now()}.webm`;
+            formData.append("audio", blob, filename);
             formData.append("slug", meetingId);
             formData.append("userId", user?.id || "unknown");
-            formData.append("speaker", `${token ? "doctor" : "patient"}`);
-            formData.append("timestamp", timestamp.toString());
+            formData.append("speaker", meta.speaker);
+            formData.append("startTime", meta.startTime);
+            formData.append("endTime", meta.endTime);
 
-            const response = await fetch(`${import.meta.env.VITE_MAIN_SERVER_URL}/transcript/uploadAudio`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${await getToken()}`,
-                },
-                body: formData,
-            });
+            const response = await fetch(
+                `${
+                    import.meta.env.VITE_MAIN_SERVER_URL
+                }/transcript/uploadAudio`,
+                {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${await getToken()}` },
+                    body: formData,
+                }
+            );
 
             if (!response.ok) {
                 console.error("Upload failed:", await response.text());
-                setRecordingStatus("Upload failed, retrying...");
-            } else {
-                uploadQueueRef.current.shift();
-                setRecordingStatus(
-                    `Uploaded chunk (${uploadQueueRef.current.length} remaining)`
-                );
-
-                setTimeout(() => {
-                    if (isRecording) {
-                        setRecordingStatus("Recording...");
-                    }
-                }, 2000);
+                setRecordingStatus("Upload failed, retrying in 5s...");
+                setTimeout(processUploadQueue, 5000);
+                return;
             }
+
+            uploadQueueRef.current.shift();
+            setRecordingStatus(
+                `Uploaded chunk (${uploadQueueRef.current.length} remaining)`
+            );
+            setTimeout(() => {
+                if (isRecording) setRecordingStatus("Recording...");
+            }, 2000);
         } catch (error) {
             console.error("Error uploading audio chunk:", error);
-            setRecordingStatus("Upload error, will retry...");
+            setRecordingStatus("Upload error, will retry in 5s...");
+            setTimeout(processUploadQueue, 5000);
         } finally {
             isUploadingRef.current = false;
-
             if (uploadQueueRef.current.length > 0) {
                 setTimeout(processUploadQueue, 1000);
             }
         }
-    }, [meetingId, user, isRecording]);
+    }, [meetingId, user, isRecording, getToken]);
 
     const addChunkToUploadQueue = useCallback(
-        (blob, timestamp) => {
-            uploadQueueRef.current.push({ blob, timestamp });
-
-            if (!isUploadingRef.current) {
-                processUploadQueue();
-            }
+        (blob, meta) => {
+            uploadQueueRef.current.push({ blob, meta });
+            if (!isUploadingRef.current) processUploadQueue();
         },
         [processUploadQueue]
     );
 
     const cleanUp = useCallback(() => {
-        if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-        }
+        // stop timers & recorder
+        clearInterval(timerRef.current);
+        clearInterval(chunkIntervalRef.current);
+        timerRef.current = chunkIntervalRef.current = null;
 
-        if (
-            mediaRecorderRef.current &&
-            mediaRecorderRef.current.state !== "inactive"
-        ) {
+        if (mediaRecorderRef.current?.state !== "inactive") {
+            // flush final chunk
+            mediaRecorderRef.current.requestData(); // :contentReference[oaicite:0]{index=0}
             mediaRecorderRef.current.stop();
         }
-
-        if (audioStreamRef.current) {
-            audioStreamRef.current.getTracks().forEach((track) => track.stop());
-            audioStreamRef.current = null;
-        }
+        audioStreamRef.current?.getTracks().forEach((t) => t.stop());
+        audioStreamRef.current = null;
 
         setRecordingTime(0);
         recordingStartTimeRef.current = null;
@@ -105,7 +104,6 @@ export function useAudioRecorder(meetingId) {
     const startRecording = useCallback(async () => {
         try {
             cleanUp();
-
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
             });
@@ -113,45 +111,37 @@ export function useAudioRecorder(meetingId) {
 
             const mediaRecorder = new MediaRecorder(stream, {
                 mimeType: "audio/webm",
-                audioBitsPerSecond: 128000, 
+                audioBitsPerSecond: 128000,
             });
-
             mediaRecorderRef.current = mediaRecorder;
             recordingStartTimeRef.current = Date.now();
 
-            let audioChunks = [];
-            let chunkStartTime = Date.now();
-
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunks.push(event.data);
-
-                    const currentTime = Date.now();
-                    const chunkDuration = currentTime - chunkStartTime;
-
-                    if (chunkDuration >= 60000) {
-                        const audioBlob = new Blob(audioChunks, {
-                            type: "audio/webm",
-                        });
-
-                        addChunkToUploadQueue(audioBlob, chunkStartTime);
-
-                        audioChunks = [];
-                        chunkStartTime = currentTime;
-                    }
+            let chunkStart = Date.now();
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    const now = Date.now();
+                    const meta = {
+                        speaker: localStorage.getItem("doctorToken")
+                            ? "doctor"
+                            : "patient",
+                        startTime: new Date(chunkStart).toISOString(),
+                        endTime: new Date(now).toISOString(),
+                    };
+                    addChunkToUploadQueue(e.data, meta);
+                    chunkStart = now;
                 }
             };
 
-            mediaRecorder.onstop = () => {
-                if (audioChunks.length > 0) {
-                    const audioBlob = new Blob(audioChunks, {
-                        type: "audio/webm",
-                    });
-                    addChunkToUploadQueue(audioBlob, chunkStartTime);
-                }
-            };
+            // 1) Start continuous recording (no timeslice) :contentReference[oaicite:1]{index=1}
+            mediaRecorder.start();
 
-            mediaRecorder.start(1000);
+            // 2) Every 60s, request a blob
+            chunkIntervalRef.current = setInterval(() => {
+                if (mediaRecorderRef.current.state === "recording") {
+                    mediaRecorderRef.current.requestData(); // :contentReference[oaicite:2]{index=2}
+                }
+            }, 60 * 1000);
+
             setIsRecording(true);
             setRecordingStatus("Recording started");
 
@@ -161,58 +151,35 @@ export function useAudioRecorder(meetingId) {
                 );
                 setRecordingTime(elapsed);
             }, 1000);
-        } catch (error) {
-            console.error("Error starting recording:", error);
+        } catch (err) {
+            console.error("Error starting recording:", err);
             setRecordingStatus("Failed to start recording");
             setIsRecording(false);
         }
     }, [cleanUp, addChunkToUploadQueue]);
 
     const stopRecording = useCallback(() => {
-        if (
-            mediaRecorderRef.current &&
-            mediaRecorderRef.current.state !== "inactive"
-        ) {
-            mediaRecorderRef.current.stop();
-        }
-
-        if (audioStreamRef.current) {
-            audioStreamRef.current.getTracks().forEach((track) => track.stop());
-            audioStreamRef.current = null;
-        }
-
-        if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-        }
-
+        cleanUp();
         setIsRecording(false);
         setRecordingStatus(
             `Recording stopped. Uploading remaining chunks (${uploadQueueRef.current.length})...`
         );
+        if (!isUploadingRef.current) processUploadQueue();
 
-        if (uploadQueueRef.current.length > 0 && !isUploadingRef.current) {
-            processUploadQueue();
-        }
-
-        const checkUploadsComplete = setInterval(() => {
-            if (uploadQueueRef.current.length === 0) {
-                clearInterval(checkUploadsComplete);
+        // wait for queue to drain
+        const waiter = setInterval(() => {
+            if (
+                uploadQueueRef.current.length === 0 &&
+                !isUploadingRef.current
+            ) {
+                clearInterval(waiter);
                 setRecordingStatus("All uploads complete");
-
-                setTimeout(() => {
-                    setRecordingTime(0);
-                    setRecordingStatus("");
-                }, 3000);
+                setTimeout(() => setRecordingStatus(""), 3000);
             }
         }, 1000);
-    }, [processUploadQueue]);
+    }, [cleanUp, processUploadQueue]);
 
-    useEffect(() => {
-        return () => {
-            cleanUp();
-        };
-    }, [cleanUp]);
+    useEffect(() => () => cleanUp(), [cleanUp]);
 
     return {
         isRecording,
