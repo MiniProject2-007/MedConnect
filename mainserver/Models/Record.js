@@ -16,7 +16,7 @@ const recordSchema = new mongoose.Schema(
         recordType: {
             type: String,
             required: true,
-            enum: ["prescription", "report", "recording", "other","transcript"],
+            enum: ["prescription", "report", "other"],
             default: "other",
         },
         key: {

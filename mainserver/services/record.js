@@ -33,10 +33,11 @@ class RecordService {
             });
 
             await record.save();
-            await Appointment.updateOne(
+            const temp = await Appointment.updateOne(
                 { slug: meetingId, userId: userId },
                 { $push: { records: record._id } }
             );
+            console.log(temp)
             res.status(201).send({ message: "Record created successfully" });
         } catch (e) {
             console.log(e);
