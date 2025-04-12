@@ -169,18 +169,28 @@ export function LandingHeader() {
                             >
                                 Contact
                             </Button>
-                            <div className="flex flex-col gap-2 pt-2">
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                    className="w-full"
-                                >
-                                    <Link to="/login">Log In</Link>
-                                </Button>
-                                <Button asChild className="w-full">
-                                    <Link to="/signup">Sign Up</Link>
-                                </Button>
-                            </div>
+                            {!isSignedIn ? (
+                                <div className="flex flex-col justify-center items-center gap-4">
+                                    <SignedOut>
+                                        <SignInButton forceRedirectUrl="/dashboard">
+                                            <Button variant="outline">
+                                                Log In
+                                            </Button>
+                                        </SignInButton>
+                                    </SignedOut>
+                                    <SignedOut>
+                                        <SignUpButton forceRedirectUrl="/dashboard">
+                                            <Button>Sign Up</Button>
+                                        </SignUpButton>
+                                    </SignedOut>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col justify-center items-center">
+                                    <Button variant="outline" asChild>
+                                        <Link to="/dashboard">Dashboard</Link>
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
