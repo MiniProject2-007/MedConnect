@@ -24,7 +24,7 @@ app.use("/api/record", recordRouter);
 app.use("/api/whiteboard", whiteboardRouter);
 app.use("/api/doctor", doctorRouter);
 app.use("/api/transcript", transcriptRouter);
-app.use("/api/user", userRouter);   
+app.use("/api/auth", userRouter);   
 
 const startServer = async () => {
     try {

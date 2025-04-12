@@ -24,6 +24,7 @@
     "mongoose": "^8.7.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
+    "svix": "^1.64.0",
     "vosk": "^0.3.32"
   },
   "overrides": {
