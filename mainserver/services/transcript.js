@@ -12,7 +12,7 @@ import { PassThrough } from 'stream'
 
 class TranscriptService {
     constructor() {
-        const modelPath = path.resolve("speechmodels/vosk-model-small-en-us-0.15");
+        const modelPath = path.resolve("lib/vosk-model-small-en-in-0.4");
         if (!fs.existsSync(modelPath)) {
             throw new Error("Vosk model not found. Please download and place it in the project directory.");
         }
@@ -153,18 +153,24 @@ class TranscriptService {
             const chunks = [];
             outputStream.on('data', chunk => chunks.push(chunk));
             outputStream.on('error', reject);
-            outputStream.on('end', () => {
-                resolve(Buffer.concat(chunks));
-            });
+            outputStream.on('end', () => resolve(Buffer.concat(chunks)));
 
             ffmpeg({ source: inputStream })
-                .inputFormat('webm')                    // tell ffmpeg the container type
-                .outputOptions(['-ar 16000', '-ac 1'])  // 16 kHz, mono
-                .format('wav')                          // to WAV format
+                .inputFormat('webm')
+                .audioFilters([
+                    'highpass=f=200,lowpass=f=3000',                            // band filter
+                    'silenceremove=start_periods=1:start_silence=0.5:start_threshold=-50dB',  // trim silence :contentReference[oaicite:5]{index=5}
+                    'loudnorm=I=-24:LRA=7:TP=-2'                                // loudness normalization :contentReference[oaicite:6]{index=6}
+                    // or use 'dynaudnorm' instead of or in addition to loudnorm :contentReference[oaicite:7]{index=7}
+                ])
+                .outputOptions(['-ar 16000', '-ac 1'])
+                .format('wav')
                 .on('error', reject)
                 .pipe(outputStream, { end: true });
         });
     }
+
+
 
     transcribeAudio = (wavBuffer) => {
         return new Promise((resolve, reject) => {

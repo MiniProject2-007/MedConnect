@@ -151,7 +151,7 @@ export function useAudioRecorder(meetingId) {
                 }
             };
 
-            mediaRecorder.start(60000);
+            mediaRecorder.start(20000);
             setIsRecording(true);
             setRecordingStatus("Recording started");
 
