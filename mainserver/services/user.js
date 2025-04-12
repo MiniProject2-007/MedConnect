@@ -50,7 +50,7 @@ class UserService {
 
                 const to = u.phone_numbers?.[0]?.phone_number;
                 if (to) {
-                    await fetch(
+                    let resw = await fetch(
                         `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
                         {
                             method: "POST",
@@ -78,6 +78,7 @@ class UserService {
                             }),
                         }
                     ); 
+                    console.log("WhatsApp response:", resw.status, await resw.json());
                 }
             }
             res.status(200).send("OK");
