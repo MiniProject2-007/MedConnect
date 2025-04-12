@@ -1,4 +1,4 @@
-import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
+import { requireAuth } from "@clerk/express";
 import { Router } from "express";
 import recordService from "../services/record.js";
 import multer from "multer";
@@ -9,11 +9,11 @@ const upload = multer({ storage: storage });
 
 router.post(
     "/createRecord",
-    ClerkExpressRequireAuth(),
+    requireAuth(),
     upload.single("file"),
     recordService.createRecord
 );
 
-router.get("/getRecords/:meetingId", ClerkExpressRequireAuth(), recordService.getRecords);
+router.get("/getRecords/:meetingId", requireAuth(), recordService.getRecords);
 
 export default router;

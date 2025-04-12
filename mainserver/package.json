@@ -12,19 +12,19 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.670.0",
     "@aws-sdk/s3-request-presigner": "^3.670.0",
-    "@clerk/clerk-sdk-node": "^5.0.48",
+    "@clerk/express": "^1.4.4",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "express-validator": "^7.2.0",
+    "fluent-ffmpeg": "^2.1.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
-    "vosk": "^0.3.32",
-    "fluent-ffmpeg": "^2.1.2"
+    "vosk": "^0.3.32"
   },
   "overrides": {
     "ffi-napi": "npm:@2060.io/ffi-napi",

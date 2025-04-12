@@ -8,6 +8,7 @@ import recordRouter from "./routes/record.js";
 import whiteboardRouter from "./routes/whiteboard.js";
 import doctorRouter from "./routes/doctor.js";
 import transcriptRouter from "./routes/transcript.js"
+import userRouter from "./routes/user.js";
 
 const app = express();
 
@@ -22,7 +23,8 @@ app.use("/api/appointment", appointmentRouter);
 app.use("/api/record", recordRouter);
 app.use("/api/whiteboard", whiteboardRouter);
 app.use("/api/doctor", doctorRouter);
-app.use("/api/transcript", transcriptRouter);   
+app.use("/api/transcript", transcriptRouter);
+app.use("/api/user", userRouter);   
 
 const startServer = async () => {
     try {

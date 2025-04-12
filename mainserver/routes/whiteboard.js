@@ -1,4 +1,4 @@
-import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
+import { requireAuth } from "@clerk/express";
 import { Router } from "express";
 import whiteboardService from "../services/whiteboard.js";
 import multer from "multer";

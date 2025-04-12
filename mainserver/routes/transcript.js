@@ -1,4 +1,4 @@
-import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
+import { requireAuth } from "@clerk/express";
 import { Router } from "express";
 import multer from "multer";
 import transcriptService from "../services/transcript.js";
@@ -10,7 +10,7 @@ const upload = multer({ storage: storage });
 
 router.post(
     "/uploadAudio",
-    ClerkExpressRequireAuth(),
+    requireAuth(),
     uploadAudioValidator,
     upload.single("audio"),
     transcriptService.uploadAudio
@@ -18,7 +18,7 @@ router.post(
 
 router.post(
     "/generateTranscript/:slug",
-    ClerkExpressRequireAuth(),
+    requireAuth(),
     transcriptService.generateTranscript
 );
 
