@@ -1,8 +1,14 @@
 import { clerkClient } from "@clerk/express";
 import { Webhook } from "svix";
 import User from "../Models/User.js";
+import twilio from "twilio"
+import { config } from "dotenv";
+config();
 
 class UserService {
+    constructor() {
+        this.twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    }
     getUserInfo = async (userId) => {
         return await clerkClient.users.getUser(userId);
     };
@@ -50,35 +56,13 @@ class UserService {
 
                 const to = u.phone_numbers?.[0]?.phone_number;
                 if (to) {
-                    let resw = await fetch(
-                        `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
-                        {
-                            method: "POST",
-                            headers: {
-                                Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                                messaging_product: "whatsapp",
-                                recipient_type: "individual",
-                                to,
-                                type: "template",
-                                template: {
-                                    name: "account_creation_confirmation_3",
-                                    language: { code: "en_US" },
-                                    components: [
-                                        {
-                                            type: "body",
-                                            parameters: [
-                                                { type: "text", text: u.first_name }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }),
-                        }
-                    ); 
-                    console.log("WhatsApp response:", resw.status, await resw.json());
+                    const message = await this.twilioClient.messages.create({
+                        body: "Hello there!",
+                        from: process.env.TWILIO_PHONE_NUMBER,
+                        to:"whatsapp:" + to,
+                    });
+
+                    console.log(message.body);
                 }
             }
             res.status(200).send("OK");
