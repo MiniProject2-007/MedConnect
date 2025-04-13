@@ -1,14 +1,9 @@
 import { clerkClient } from "@clerk/express";
 import { Webhook } from "svix";
 import User from "../Models/User.js";
-import twilio from "twilio"
-import { config } from "dotenv";
-config();
+import whatsappService from "./whatsapp.js";
 
 class UserService {
-    constructor() {
-        this.twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    }
     getUserInfo = async (userId) => {
         return await clerkClient.users.getUser(userId);
     };
@@ -56,16 +51,7 @@ class UserService {
 
                 const to = u.phone_numbers?.[0]?.phone_number;
                 if (to) {
-                    const message = await this.twilioClient.messages.create({
-                        contentSid:"HXd3ecd5e94d0c107a70307f967c61692a",
-                        contentVariables:JSON.stringify({
-                            1: `${u.first_name}`,
-                        }),
-                        from: `${process.env.TWILIO_SENDER_ID}`,
-                        to: `whatsapp:${to}`,
-                    });
-
-                    console.log(message.body);
+                    await whatsappService.sendWelcomeMessage(to, u.first_name);
                 }
             }
             res.status(200).send("OK");
