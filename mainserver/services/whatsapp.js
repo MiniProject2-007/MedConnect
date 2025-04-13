@@ -29,7 +29,7 @@ class WhatsappService {
 
     receiveMessage = async (req, res) => {
         try {
-            console.log("Received WhatsApp message:", req.Body);
+            console.log("Received WhatsApp message:", req);
             res.send("OK");
         } catch (error) {
             console.error("Error receiving WhatsApp message:", error);
