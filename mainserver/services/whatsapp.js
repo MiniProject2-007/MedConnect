@@ -29,8 +29,17 @@ class WhatsappService {
 
     receiveMessage = async (req, res) => {
         try {
-            console.log("Received WhatsApp message:", req);
-            res.send("OK");
+            const body = req.body;
+            const message = body.Body;
+            if (!message) {
+                return res.status(400).send("No message received");
+            }
+            const from = body.From;
+            const to = body.To;
+            await this.sendOptions(from);
+            console.log(`Received message: ${message} from ${from}`);
+            console.log(`Sending options to ${from}`);
+            res.status(200).send("Message received");
         } catch (error) {
             console.error("Error receiving WhatsApp message:", error);
         }
@@ -41,7 +50,7 @@ class WhatsappService {
             const message = await this.twilioClient.messages.create({
                 contentSid: this.optionsid,
                 from: `${this.twilioSenderId}`,
-                to: `whatsapp:${to}`,
+                to: `${to}`,
             });
 
             return message;
