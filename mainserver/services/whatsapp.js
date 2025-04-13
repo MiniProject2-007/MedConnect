@@ -36,9 +36,19 @@ class WhatsappService {
             }
             const from = body.From;
             const to = body.To;
-            await this.sendOptions(from);
             console.log(`Received message: ${message} from ${from}`);
-            console.log(`Sending options to ${from}`);
+            switch (message.toLowerCase().trim()) {
+                case "help":
+                    await this.sendOptions(from);
+                    console.log("Sent options");
+                    break;
+                case "2":
+                    break;
+                case "3":
+                    break;
+                default:
+                    console.log("Invalid option");
+            }
             res.status(200).send("Message received");
         } catch (error) {
             console.error("Error receiving WhatsApp message:", error);
