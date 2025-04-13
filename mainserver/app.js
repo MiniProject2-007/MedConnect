@@ -9,6 +9,7 @@ import whiteboardRouter from "./routes/whiteboard.js";
 import doctorRouter from "./routes/doctor.js";
 import transcriptRouter from "./routes/transcript.js"
 import userRouter from "./routes/user.js";
+import whatsappRouter from "./routes/whatsapp.js";  
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/whiteboard", whiteboardRouter);
 app.use("/api/doctor", doctorRouter);
 app.use("/api/transcript", transcriptRouter);
 app.use("/api/auth", userRouter);   
+app.use("/api/whatsapp",whatsappRouter)
 
 const startServer = async () => {
     try {

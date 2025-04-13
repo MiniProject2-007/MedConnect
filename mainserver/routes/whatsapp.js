@@ -3,6 +3,6 @@ import whatsappService from '../services/whatsapp';
 
 const router = Router()
 
-router.get("/receive", whatsappService.receiveMessage);
+router.post("/receive", whatsappService.receiveMessage);
 
 export default router
