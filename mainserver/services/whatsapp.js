@@ -1,7 +1,7 @@
 import twilio from "twilio"
 import { config } from "dotenv";
 import appointmentService from "./appointment.js";
-import doctorService from "./doctor.js";
+import userService from "./user.js"
 config();
 
 class WhatsappService {
@@ -16,6 +16,7 @@ class WhatsappService {
         try {
             const body = req.body;
             const message = body.Body;
+            console.log(body)
             if (!message) {
                 return res.status(400).send("No message received");
             }
@@ -28,6 +29,7 @@ class WhatsappService {
                     break;
                 case "next free slot":
                     await this.sendNextFreeSlot(from);
+                    break;
                 case "my next appointment":
                     await this.sendNextAppointment(from);
                     break;
@@ -104,9 +106,26 @@ class WhatsappService {
 
     sendNextAppointment = async (to) => {
         try {
-            const appointment = await appointmentService.getNextAppointment(from);
-            await this.sendNormalMessage(to, appointment);
-            console.log("Sent next appointment message");
+            const userId = await userService.getUserIdFromPhone(to.split(":")[1]);
+            if(!userId) {
+                await this.sendNormalMessage(to, "No user found with this phone number.");
+                return;
+            }
+            const info = await appointmentService.nextAppointment(userId);
+            if (!info) {
+                await this.sendNormalMessage(to, "No upcoming appointments found.");
+                return;
+            }
+            const message = await this.twilioClient.messages.create({
+                contentSid: this.withlinksid,
+                contentVariables: JSON.stringify({
+                    1: `Hello,\nYour upcomng appointment is on \n*Date : ${info.date}* \n*Time : ${info.time}*.`,
+                    2: `dashboard/consultations`,
+                }),
+                from: `${this.twilioSenderId}`,
+                to: `${to}`,
+            })
+            console.log("Sent next appointment message",info);
         } catch (error) {
             console.error("Error sending WhatsApp message:", error);
         }

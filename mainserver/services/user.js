@@ -12,7 +12,21 @@ class UserService {
         const user = await clerkClient.users.getUser(userId);
         return user.emailAddresses[0].emailAddress;
     };
-
+    getUserIdFromPhone = async (phone) => {
+        try {
+            const user = await clerkClient.users.getUserList({
+                phoneNumber: phone,
+            });
+            if (user.length === 0) {
+                return null;
+            }
+            console.log("User found:", user);
+            return user.data[0].id;
+        }catch (error) {
+            console.error("Error fetching user by phone number:", error);
+            throw error;
+        }
+    };
     userCreated = async (req, res) => {
         try {
             const wh = new Webhook(process.env.CLERK_SIGNING_SECRET);

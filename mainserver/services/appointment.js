@@ -342,14 +342,44 @@ class AppointmentService {
     };
 
     nextAppointment = async (userId) => {
-        try{
+        try {
+            const nowUtcMs = Date.now()
+            const istOffsetMs = 5.5 * 60 * 60 * 1000;
+            const nowIst = new Date(nowUtcMs + istOffsetMs);
 
-        }catch(err){
+            const year = nowIst.getFullYear();
+            const month = nowIst.getMonth() + 1;
+            const day = nowIst.getDate();
+            const hours = nowIst.getHours();
+            const mins = nowIst.getMinutes();
+            const nowIstTimestamp = nowIst.getTime();
+
+            const dateStr = `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+            const timeStr = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+
+            const upcoming = await Appointment.find({
+                userId,
+                date: { $gte: dateStr },
+                timeSlot: { $gte: timeStr },
+                status: { $nin: ["cancelled", "completed", "rejected"] },
+            }).sort({ date: 1 });
+
+            if (upcoming.length === 0) {
+                return false;
+            }
+
+
+            const next = upcoming[0];
+            return {
+                date: next.date,
+                time: next.timeSlot,
+                slug: next.slug,
+            };
+        } catch (err) {
             console.error("Next Appointment Error:", err);
             return false;
         }
-    }
-
+    };
 }
 
 export default new AppointmentService();
