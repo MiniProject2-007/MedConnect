@@ -341,6 +341,15 @@ class AppointmentService {
         }
     };
 
+    nextAppointment = async (userId) => {
+        try{
+
+        }catch(err){
+            console.error("Next Appointment Error:", err);
+            return false;
+        }
+    }
+
 }
 
 export default new AppointmentService();
