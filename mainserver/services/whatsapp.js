@@ -1,5 +1,7 @@
 import twilio from "twilio"
 import { config } from "dotenv";
+import appointmentService from "./appointment.js";
+import doctorService from "./doctor.js";
 config();
 
 class WhatsappService {
@@ -36,14 +38,13 @@ class WhatsappService {
             }
             const from = body.From;
             const to = body.To;
-            console.log(`Received message: ${message} from ${from}`);
+            console.log("Received message:", body);
             switch (message.toLowerCase().trim()) {
                 case "help":
                     await this.sendOptions(from);
-                    console.log("Sent options");
                     break;
-                case "2":
-                    break;
+                case "next free slot":
+                    await this.sendNextFreeSlot(from);
                 case "3":
                     break;
                 default:
@@ -63,9 +64,34 @@ class WhatsappService {
                 to: `${to}`,
             });
 
+            console.log("Sent options");
             return message;
         }
         catch (error) {
+            console.error("Error sending WhatsApp message:", error);
+        }
+    }
+
+    sendNormalMessage = async (to, message) => {
+        try {
+            const msg = await this.twilioClient.messages.create({
+                body: message,
+                from: `${this.twilioSenderId}`,
+                to: `${to}`,
+            });
+
+            return msg;
+        } catch (error) {
+            console.error("Error sending WhatsApp message:", error);
+        }
+    }
+
+    sendNextFreeSlot = async (to) => {
+        try {
+            const freeSlot = await appointmentService.nextFreeSlot();
+            await this.sendNormalMessage(to, freeSlot);
+            console.log("Sent free slot message");
+        } catch (error) {
             console.error("Error sending WhatsApp message:", error);
         }
     }

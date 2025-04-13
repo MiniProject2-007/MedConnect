@@ -1,3 +1,6 @@
+from typing import Optional
+from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import json
 import chromadb
 from fastapi import FastAPI, HTTPException, Depends, Request
@@ -94,13 +97,7 @@ async def get_next_appointment(user_data):
     return f"Your next appointment is on {appt['date']} at {appt['timeSlot']}."
 
 
-from datetime import datetime, timedelta
-
-async def get_next_free_slot(user_data):
-    """
-    Determine the next available free slot considering the current time.
-    If no free slot is available today, return the first available slot for tomorrow.
-    """
+async def get_next_free_slot() -> str:
     available_slots = [
         "09:00 AM - 09:30 AM",
         "09:30 AM - 10:00 AM",
@@ -119,43 +116,46 @@ async def get_next_free_slot(user_data):
         "04:00 PM - 04:30 PM",
         "04:30 PM - 05:00 PM",
     ]
-    now = datetime.now()
 
-    # Check for free slots today.
-    today_str = now.strftime("%Y-%m-%d")
-    cursor = appointments_collection.find({
-        "date": today_str,
-        "status": {"$nin": ["cancelled", "completed", "rejected"]}
-    })
-    appointments_today = await cursor.to_list(length=None)
-    booked_slots_today = {appt["timeSlot"] for appt in appointments_today if "timeSlot" in appt}
-    for slot in available_slots:
-        if slot in booked_slots_today:
-            continue
-        slot_start_str = slot.split(" - ")[0]
-        try:
-            slot_start_time = datetime.strptime(slot_start_str, "%I:%M %p").time()
-        except ValueError:
-            continue
-        slot_start_datetime = datetime.combine(now.date(), slot_start_time)
-        if slot_start_datetime > now:
-            return f"The next free slot is available on {today_str} at {slot}."
+    now_ist = datetime.now(ZoneInfo("Asia/Kolkata"))  # get current IST :contentReference[oaicite:0]{index=0}
+    day = now_ist.date()
+    cursor_dt = now_ist
 
-    # If no free slots today, check for tomorrow.
-    tomorrow_date = now.date() + timedelta(days=1)
-    tomorrow_str = tomorrow_date.strftime("%Y-%m-%d")
-    cursor = appointments_collection.find({
-        "date": tomorrow_str,
-        "status": {"$nin": ["cancelled", "completed", "rejected"]}
-    })
-    appointments_tomorrow = await cursor.to_list(length=None)
-    booked_slots_tomorrow = {appt["timeSlot"] for appt in appointments_tomorrow if "timeSlot" in appt}
+    async def booked_slots(date_str: str) -> Set[str]:
+        cursor = appointments_collection.find({
+            "date": date_str,
+            "status": {"$nin": ["cancelled", "completed", "rejected"]}
+        })
+        appts = await cursor.to_list(length=None)
+        return {a["timeSlot"] for a in appts if "timeSlot" in a}
+
+    def pad(n: int) -> str:
+        return str(n).zfill(2)
+
+    today_key = f"{day.year}-{pad(day.month)}-{pad(day.day)}"
+    booked_today = await booked_slots(today_key)
+
     for slot in available_slots:
-        if slot not in booked_slots_tomorrow:
-            return f"The next free slot is available on {tomorrow_str} at {slot}."
+        start_str = slot.split(" - ")[0]
+        dt = datetime.strptime(start_str, "%I:%M %p")
+        slot_dt = datetime(
+            year=day.year, month=day.month, day=day.day,
+            hour=dt.hour, minute=dt.minute,
+            tzinfo=ZoneInfo("Asia/Kolkata")
+        )
+        if slot_dt <= cursor_dt or slot in booked_today:
+            continue
+        return f"Next free slot: {today_key} at {slot}"
+
+    tomorrow = day + timedelta(days=1)
+    tom_key = f"{tomorrow.year}-{pad(tomorrow.month)}-{pad(tomorrow.day)}"
+    booked_tom = await booked_slots(tom_key)
+
+    for slot in available_slots:
+        if slot not in booked_tom:
+            return f"Next free slot: {tom_key} at {slot}"
 
     return "No free slots available today or tomorrow."
-
 
 def search_faq_answer(query: str):
     results = collection.query(query_texts=[query], n_results=1)

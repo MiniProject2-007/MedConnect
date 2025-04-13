@@ -264,6 +264,83 @@ class AppointmentService {
             res.status(500).json({ error: "Internal Server Error" });
         }
     }
+
+    nextFreeSlot = async () => {
+        try {
+            const availableSlots = [
+                "09:00 AM - 09:30 AM",
+                "09:30 AM - 10:00 AM",
+                "10:00 AM - 10:30 AM",
+                "10:30 AM - 11:00 AM",
+                "11:00 AM - 11:30 AM",
+                "11:30 AM - 12:00 PM",
+                "12:00 PM - 12:30 PM",
+                "12:30 PM - 01:00 PM",
+                "01:00 PM - 01:30 PM",
+                "01:30 PM - 02:00 PM",
+                "02:00 PM - 02:30 PM",
+                "02:30 PM - 03:00 PM",
+                "03:00 PM - 03:30 PM",
+                "03:30 PM - 04:00 PM",
+                "04:00 PM - 04:30 PM",
+                "04:30 PM - 05:00 PM",
+            ];
+
+            const nowUtc = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const nowIst = new Date(nowUtc.getTime() + istOffset);
+
+            const year = nowIst.getFullYear();
+            const month = nowIst.getMonth() + 1;
+            const day = nowIst.getDate();
+            const hours = nowIst.getHours();
+            const mins = nowIst.getMinutes();
+            const nowIstTimestamp = nowIst.getTime();
+
+            const bookedSlots = async (dateKey) => {
+                const appts = await Appointment.find({
+                    date: dateKey,
+                    status: { $nin: ["cancelled", "completed", "rejected"] },
+                }).lean();
+                return new Set(appts.map(a => a.timeSlot));
+            };
+
+            const pad = (n) => n.toString().padStart(2, "0");
+            const todayKey = `${year}-${pad(month)}-${pad(day)}`;
+            const bookedToday = await bookedSlots(todayKey);
+
+            for (const slot of availableSlots) {
+                const [start] = slot.split(" - ");
+                let [h, m] = start.split(":").map(Number);
+                const ampm = start.slice(-2);
+                if (ampm === "PM" && h !== 12) h += 12;
+                if (ampm === "AM" && h === 12) h = 0;
+                const slotTimestamp = Date.UTC(year, month - 1, day, h, m) - istOffset;
+                if (slotTimestamp <= nowIstTimestamp) continue;
+                if (bookedToday.has(slot)) continue;
+                return `Next free slot: ${todayKey} at ${slot}`;
+            }
+
+            const tomorrowIst = new Date(nowIst.getTime() + 24 * 60 * 60 * 1000);
+            const y2 = tomorrowIst.getFullYear();
+            const mo2 = tomorrowIst.getMonth() + 1;
+            const d2 = tomorrowIst.getDate();
+            const tomKey = `${y2}-${pad(mo2)}-${pad(d2)}`;
+            const bookedTomorrow = await bookedSlots(tomKey);
+
+            for (const slot of availableSlots) {
+                if (!bookedTomorrow.has(slot)) {
+                    return `Next free slot: ${tomKey} at ${slot}`;
+                }
+            }
+
+            return "No free slots available today or tomorrow.";
+        } catch (err) {
+            console.error("Next Free Slot Error:", err);
+            return false;
+        }
+    };
+
 }
 
 export default new AppointmentService();
