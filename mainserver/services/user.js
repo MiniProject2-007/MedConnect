@@ -57,7 +57,10 @@ class UserService {
                 const to = u.phone_numbers?.[0]?.phone_number;
                 if (to) {
                     const message = await this.twilioClient.messages.create({
-                        body: "Hello there!",
+                        contentSid:"HXd3ecd5e94d0c107a70307f967c61692a",
+                        contentVariables:JSON.stringify({
+                            1: `${u.first_name}`,
+                        }),
                         from: `${process.env.TWILIO_SENDER_ID}`,
                         to: `whatsapp:${to}`,
                     });
