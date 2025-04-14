@@ -12,10 +12,10 @@ class WhatsappService {
             process.env.TWILIO_AUTH_TOKEN
         );
 
-        this.withLinksSid = "HXe65e2874c67d8d4e0b2514f566d041e7";
-        this.optionsSid = "HX0c2de79f80c5293c31b093e649c96e41";
-        this.timeslotSid = "HXc808fa9097fc911e10607603d6dfe76a";
-        this.confirmationSid = "HXf1a0b8c4d2e5b3c7e6f9a0d4f5e6d7e1";
+        this.withLinksSid = process.env.TWILIO_WITH_LINK_SID;
+        this.optionsSid = process.env.TWILIO_OPTIONS_SID;
+        this.timeslotSid = process.env.TWILIO_TIMESLOT_SID;
+        this.confirmationSid = process.env.TWILIO_CONFIRMATION_SID;
         this.twilioSenderId = process.env.TWILIO_SENDER_ID;
 
         this.bookAppointmentUsersSteps = {};
