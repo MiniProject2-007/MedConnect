@@ -110,6 +110,16 @@ class AppointmentService {
         try {
             const { date } = req.params;
             console.log("Date: ", date);
+            const availableSlots = this.getAvailableSlots(date)
+            res.status(200).json(availableSlots);
+        } catch (err) {
+            console.log("Get Available Time Slots Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
+
+    getAvailableSlots = async (date) => {
+        try {
             const appointments = await Appointment.find({ date });
 
             const availableSlots = [
@@ -148,13 +158,12 @@ class AppointmentService {
                 }
                 return isAvailable;
             });
-
-            res.status(200).json(availableSlotsFiltered);
+            return availableSlotsFiltered;
         } catch (err) {
-            console.log("Get Available Time Slots Error: ", err);
-            res.status(500).json({ error: "Internal Server Error" });
+            console.log("Get Available Slots Error: ", err);
+            return [];
         }
-    };
+    }
 
     getUpcomingAppointments = async (req, res) => {
         try {
