@@ -25,6 +25,25 @@ class AppointmentService {
                     .status(400)
                     .json({ error: "Time Slot not available" });
             }
+            const appointment = await this.createAppointmentFromData({
+                userId,
+                date,
+                timeSlot,
+                reason,
+                appointmentType,
+                user
+            })
+
+            res.status(201).json(appointment);
+        } catch (err) {
+            console.log("Create Appointment Error: ", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
+
+    createAppointmentFromData = async (data) => {
+        try {
+            const { userId, date, timeSlot, reason, appointmentType, user } = data;
             let meeting, whiteboard;
             if (appointmentType.trim().toLocaleLowerCase() === "video") {
                 meeting = await meetingService.createMeeting();
@@ -51,13 +70,13 @@ class AppointmentService {
                 whiteboard: whiteboard && whiteboard._id,
                 records: [],
             });
-
-            res.status(201).json(appointment);
+            
+            return appointment;
         } catch (err) {
-            console.log("Create Appointment Error: ", err);
-            res.status(500).json({ error: "Internal Server Error" });
+            console.log("Create Appointment From Data Error: ", err);
+            throw new Error("Error creating appointment");
         }
-    };
+    }
 
     isTimeSlotAvailable = async (date, timeSlot) => {
         try {

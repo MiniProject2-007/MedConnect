@@ -279,7 +279,7 @@ class WhatsappService {
             const { userId, selectedDate, selectedTime, reason } = state;
             const user = await userService.getUserInfo(userId);
 
-            await appointmentService.createAppointment({
+            await appointmentService.createAppointmentFromData({
                 userId,
                 date: selectedDate,
                 timeSlot: selectedTime,
