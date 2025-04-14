@@ -45,7 +45,7 @@ export function LandingHero() {
     };
 
     return (
-        <section className="min-h-[80vh] relative overflow-hidden bg-gradient-to-b from-primary/5 to-background py-20 md:py-32">
+        <section className="min-h-[80vh] relative overflow-hidden bg-gradient-to-b from-primary/5 to-background px-4 md:px-10 py-20 md:py-32">
             {/* Animated background elements */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 size-80 rounded-full bg-primary/10 blur-3xl" />
@@ -99,42 +99,6 @@ export function LandingHero() {
                                 <Link to="#how-it-works">See How It Works</Link>
                             </Button>
                         </motion.div>
-
-                        <motion.div
-                            className="mt-6 flex flex-wrap items-center gap-4 text-sm"
-                            variants={itemVariants}
-                        >
-                            <div className="flex items-center gap-1">
-                                <svg
-                                    className="size-4 fill-primary"
-                                    viewBox="0 0 20 20"
-                                    fill="none"
-                                >
-                                    <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" />
-                                </svg>
-                                <span>Secure & Private</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <svg
-                                    className="size-4 fill-primary"
-                                    viewBox="0 0 20 20"
-                                    fill="none"
-                                >
-                                    <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" />
-                                </svg>
-                                <span>24/7 Support</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <svg
-                                    className="size-4 fill-primary"
-                                    viewBox="0 0 20 20"
-                                    fill="none"
-                                >
-                                    <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" />
-                                </svg>
-                                <span>Trusted by many patients</span>
-                            </div>
-                        </motion.div>
                     </motion.div>
 
                     <motion.div
@@ -148,13 +112,13 @@ export function LandingHero() {
                             className="relative z-10 rounded-xl shadow-2xl overflow-hidden border"
                             animate={floatingAnimation}
                         >
-                            {/* <img
+                            <img
                                 src="/placeholder.svg?height=600&width=800"
                                 alt="HealthConnect Dashboard"
                                 width={600}
                                 height={400}
                                 className="w-full h-auto"
-                            ></img> */}
+                            ></img>
                         </motion.div>
 
                         {/* Floating elements */}
@@ -202,7 +166,7 @@ export function LandingHero() {
                                         New Message
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        From Dr. Smith
+                                        From Doctor
                                     </p>
                                 </div>
                             </div>

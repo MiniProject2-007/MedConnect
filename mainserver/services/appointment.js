@@ -110,7 +110,8 @@ class AppointmentService {
         try {
             const { date } = req.params;
             console.log("Date: ", date);
-            const availableSlots = this.getAvailableSlots(date)
+            const availableSlots = await this.getAvailableSlots(date)
+            console.log("Available Slots: ", availableSlots);
             res.status(200).json(availableSlots);
         } catch (err) {
             console.log("Get Available Time Slots Error: ", err);

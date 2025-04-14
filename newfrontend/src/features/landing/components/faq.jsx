@@ -25,11 +25,6 @@ export function LandingFAQ() {
         "We take your privacy seriously. HealthConnect uses end-to-end encryption for all communications and is fully HIPAA compliant. Your medical records and personal information are stored securely and only accessible to you and your authorized healthcare providers.",
     },
     {
-      question: "What types of doctors are available on the platform?",
-      answer:
-        "HealthConnect offers access to a wide range of healthcare professionals, including general practitioners, specialists, mental health professionals, and more. You can filter doctors by specialty, availability, language, and other criteria to find the right provider for your needs.",
-    },
-    {
       question: "How do video consultations work?",
       answer:
         "Video consultations take place directly through our secure platform. At your scheduled appointment time, you'll receive a notification to join the call. You don't need to download any additional software—just ensure you have a stable internet connection and a device with a camera and microphone.",
@@ -47,7 +42,7 @@ export function LandingFAQ() {
     {
       question: "How do I cancel or reschedule an appointment?",
       answer:
-        "You can cancel or reschedule appointments through your dashboard. Navigate to 'My Appointments,' select the appointment you wish to modify, and choose 'Reschedule' or 'Cancel.' Please note that cancellations made less than 24 hours before the appointment may incur a fee, depending on the doctor's policy.",
+        "For now you can't cancel or reschedule an appointment, we are working on it.",
     },
   ]
 

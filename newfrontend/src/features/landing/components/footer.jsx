@@ -100,7 +100,7 @@ export function LandingFooter() {
               </li>
             </ul>
           </div>
-          <div>
+          {/* <div>
             <h3 className="text-lg font-medium mb-4">Subscribe</h3>
             <p className="text-muted-foreground mb-4">Stay updated with the latest features and releases.</p>
             <div className="flex gap-2">
@@ -109,7 +109,7 @@ export function LandingFooter() {
                 <Mail className="h-4 w-4" />
               </Button>
             </div>
-          </div>
+          </div> */}
         </div>
         <div className="mt-12 pt-8 border-t">
           <div className="flex flex-col sm:flex-row justify-between items-center">
