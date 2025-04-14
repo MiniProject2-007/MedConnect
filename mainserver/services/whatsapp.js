@@ -288,7 +288,15 @@ class WhatsappService {
                 user
             });
 
-            await this.sendNormalMessage(from, "✅ Appointment booked successfully.");
+            await this.twilioClient.messages.create({
+                contentSid: this.withLinksSid,
+                contentVariables: JSON.stringify({
+                    1: `Hello ${user.firstName},\nYour appointment has been booked successfully!\n*Date*: ${selectedDate}\n*Time*: ${selectedTime}\n*Reason*: ${reason}`,
+                    2: "dashboard/consultations"
+                }),
+                from: this.twilioSenderId,
+                to: from,
+            })
             delete this.bookAppointmentUsersSteps[from];
         } catch (error) {
             console.error("bookAppointmentFromUserSteps error:", error);
