@@ -183,7 +183,8 @@ const AppointmentDetail = () => {
                 }
             );
             if (!res.ok) {
-                throw new Error("Failed to generate transcript");
+                const data = await res.json();
+                throw new Error(data.message);
             }
             const data = await res.json();
             if (data.error) {
@@ -555,7 +556,10 @@ const AppointmentDetail = () => {
                                         className="gap-2"
                                         onClick={() => {
                                             window.open(
-                                                `${import.meta.env.VITE_WHITEBOARD_URL}${appointment.slug}`,
+                                                `${
+                                                    import.meta.env
+                                                        .VITE_WHITEBOARD_URL
+                                                }${appointment.slug}`,
                                                 "_blank"
                                             );
                                         }}
