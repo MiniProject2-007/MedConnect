@@ -90,7 +90,7 @@ class WhatsappService {
                     2: "https://med-connect-nu.vercel.app/dashboard"
                 }),
                 from: this.twilioSenderId,
-                to: `whatsapp:${to}`,
+                to: `${to}`,
             });
         } catch (error) {
             console.error("sendWelcomeMessage error:", error);
