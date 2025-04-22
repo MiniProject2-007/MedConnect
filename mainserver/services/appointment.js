@@ -5,6 +5,7 @@ import meetingService from "./meeting.js";
 import Record from "../Models/Record.js";
 import WhiteBoard from "../Models/WhiteBoard.js";
 import Transcript from "../Models/Transcript.js";
+import { getPresignedUrl } from "../lib/S3.js";
 
 class AppointmentService {
     createAppointment = async (req, res) => {
@@ -70,7 +71,7 @@ class AppointmentService {
                 whiteboard: whiteboard && whiteboard._id,
                 records: [],
             });
-            
+
             return appointment;
         } catch (err) {
             console.log("Create Appointment From Data Error: ", err);
@@ -279,6 +280,13 @@ class AppointmentService {
 
             if (!appointment) {
                 return res.status(404).json({ error: "Appointment not found" });
+            }
+
+            for (let i = 0; i < appointment.records.length; i++) {
+                appointment.records[i] = {
+                    ...appointment.records[i],
+                    url: getPresignedUrl(appointment.records[i].key)
+                }
             }
             const transcript = await Transcript.findOne({ slug: appointment.slug });
             if (transcript) {
