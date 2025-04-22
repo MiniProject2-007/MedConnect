@@ -266,7 +266,7 @@ const SideContent = ({ roomId }) => {
                                     </div>
                                     <a
                                         href={file.url}
-                                        target="_blank"
+                                        target="__blank"
                                         rel="noreferrer"
                                         className="hover:underline"
                                     >

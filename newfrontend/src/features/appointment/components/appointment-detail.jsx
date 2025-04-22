@@ -520,6 +520,9 @@ const AppointmentDetail = () => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8"
+                                                                onClick={() => {
+                                                                    window.open(record.url,"__blank")
+                                                                }}
                                                             >
                                                                 <Download
                                                                     size={16}

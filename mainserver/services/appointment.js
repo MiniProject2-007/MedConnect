@@ -282,18 +282,27 @@ class AppointmentService {
                 return res.status(404).json({ error: "Appointment not found" });
             }
 
+            let newRecords = []
             for (let i = 0; i < appointment.records.length; i++) {
-                appointment.records[i] = {
-                    ...appointment.records[i],
-                    url: getPresignedUrl(appointment.records[i].key)
+                const url = (await getPresignedUrl(appointment.records[i].key)).url;
+                let record = {
+                    ...appointment.records[i]._doc,
+                    url: url
                 }
+
+                newRecords.push(record);
             }
+
             const transcript = await Transcript.findOne({ slug: appointment.slug });
             if (transcript) {
                 appointment = {
                     ...appointment._doc,
                     transcript: transcript,
                 }
+            }
+            appointment = {
+                ...appointment,
+                records: newRecords,
             }
             res.status(200).json(appointment);
         } catch (err) {
