@@ -97,7 +97,7 @@ async def get_next_appointment(user_data):
     return f"Your next appointment is on {appt['date']} at {appt['timeSlot']}."
 
 
-async def get_next_free_slot() -> str:
+async def get_next_free_slot(user_data) -> str:
     available_slots = [
         "09:00 AM - 09:30 AM",
         "09:30 AM - 10:00 AM",
