@@ -299,10 +299,16 @@ class AppointmentService {
                     ...appointment._doc,
                     transcript: transcript,
                 }
-            }
-            appointment = {
-                ...appointment,
-                records: newRecords,
+
+                appointment = {
+                    ...appointment,
+                    records: newRecords,
+                }
+            } else {
+                appointment = {
+                    ...appointment._doc,
+                    records: newRecords,
+                }
             }
             res.status(200).json(appointment);
         } catch (err) {
